@@ -1,0 +1,1 @@
+{"version":3,"file":"dataset.d.ts","sourceRoot":"","sources":["../../../src/generated/types/dataset.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AAEH,MAAM,WAAW,OAAO;IACtB,UAAU,EAAE,MAAM,CAAC;IACnB,gBAAgB;IAChB,WAAW,CAAC,EAAE,MAAM,GAAG,IAAI,CAAC;IAC5B,gBAAgB;IAChB,cAAc,CAAC,EAAE,MAAM,GAAG,IAAI,CAAC;IAC/B,QAAQ,EAAE,MAAM,CAAC;IACjB,YAAY,EAAE,MAAM,CAAC;IACrB,UAAU,EAAE,MAAM,CAAC;CACpB"}

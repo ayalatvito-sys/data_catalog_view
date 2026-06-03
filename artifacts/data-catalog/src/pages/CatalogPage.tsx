@@ -1,0 +1,130 @@
+import { useState } from 'react';
+import {
+  Container, Box, Typography, TextField, MenuItem, Select,
+  FormControl, InputLabel, Grid, Skeleton, Alert, Button,
+  IconButton, AppBar, Toolbar, Chip
+} from '@mui/material';
+import { Search, Refresh, ErrorOutlined } from '@mui/icons-material';
+import {
+  useListDatasets,
+  getListDatasetsQueryKey,
+  useGetCatalogStats,
+  getGetCatalogStatsQueryKey
+} from '@workspace/api-client-react';
+import StatsBar from '../components/StatsBar';
+import DatasetCard from '../components/DatasetCard';
+
+export default function CatalogPage() {
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'tables_count'>('name');
+
+  const { data: statsData } = useGetCatalogStats({
+    query: { queryKey: getGetCatalogStatsQueryKey() }
+  });
+
+  const queryParams = {
+    search: search || undefined,
+    sort_by: sortBy,
+    sort_dir: (sortBy === 'tables_count' ? 'desc' : 'asc') as 'asc' | 'desc'
+  };
+
+  const { data, isLoading, isError, refetch } = useListDatasets(
+    queryParams,
+    {
+      query: {
+        queryKey: getListDatasetsQueryKey(queryParams)
+      }
+    }
+  );
+
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: '1px solid #dadce0' }}>
+        <Toolbar>
+          <Typography variant="h6" component="h1" sx={{ flexGrow: 1, fontWeight: 'bold', color: '#202124' }}>
+            קטלוג נתונים
+          </Typography>
+          {statsData?.project_id && (
+            <Chip label={`פרויקט: ${statsData.project_id}`} sx={{ ml: 2 }} variant="outlined" />
+          )}
+          <IconButton onClick={() => refetch()} color="primary" title="רענן נתונים">
+            <Refresh />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 8, flexGrow: 1 }}>
+        <StatsBar />
+
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 4, alignItems: { xs: 'stretch', md: 'center' } }}>
+          <TextField
+            fullWidth
+            placeholder="חיפוש מאגרי נתונים..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: <Search color="action" sx={{ ml: 1, mr: -0.5 }} />,
+              }
+            }}
+            size="small"
+            sx={{ flexGrow: 1, maxWidth: { md: 400 }, backgroundColor: '#fff' }}
+          />
+
+          <FormControl size="small" sx={{ minWidth: 200, backgroundColor: '#fff' }}>
+            <InputLabel id="sort-select-label">מיון לפי</InputLabel>
+            <Select
+              labelId="sort-select-label"
+              value={sortBy}
+              label="מיון לפי"
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'tables_count')}
+            >
+              <MenuItem value="name">שם</MenuItem>
+              <MenuItem value="tables_count">מספר טבלאות</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {isError ? (
+          <Alert
+            severity="error"
+            icon={<ErrorOutlined />}
+            action={
+              <Button color="inherit" size="small" onClick={() => refetch()}>
+                נסה שוב
+              </Button>
+            }
+          >
+            אירעה שגיאה בטעינת הנתונים. אנא ודא שה-API פועל ושנקבעו הרשאות GCP.
+          </Alert>
+        ) : isLoading ? (
+          <Grid container spacing={3}>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={n}>
+                <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
+              </Grid>
+            ))}
+          </Grid>
+        ) : data?.datasets.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 10, px: 2, backgroundColor: '#fff', borderRadius: 2, border: '1px dashed #dadce0' }}>
+            <Search sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary">
+              לא נמצאו מאגרי נתונים
+            </Typography>
+            <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+              נסה לשנות את מילות החיפוש
+            </Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {data?.datasets.map((dataset) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={dataset.dataset_id}>
+                <DatasetCard dataset={dataset} />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Container>
+    </Box>
+  );
+}

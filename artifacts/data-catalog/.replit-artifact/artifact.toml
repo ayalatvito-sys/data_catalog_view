@@ -1,0 +1,44 @@
+kind = "web"
+previewPath = "/"
+title = "Data Catalog Dashboard"
+version = "1.0.0"
+id = "artifacts/data-catalog"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19184
+
+[services.development]
+run = "pnpm --filter @workspace/data-catalog run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/data-catalog", "run", "build" ]
+publicDir = "artifacts/data-catalog/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19184"
+BASE_PATH = "/"
+
+[[services]]
+name = "catalog-api"
+paths = [ "/catalog-api" ]
+localPort = 8000
+
+[services.development]
+run = "cd /home/runner/workspace/artifacts/data-catalog-api && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+[services.env]
+GCP_PROJECT_ID = "dgt-gcp-econ-dev-datalake"
+GCP_LOCATION = "me-west1"
+BASE_PATH = "/catalog-api"

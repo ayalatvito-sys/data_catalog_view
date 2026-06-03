@@ -1,0 +1,170 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Data Catalog API specification
+servers:
+  - url: /catalog-api
+    description: Data Catalog API
+tags:
+  - name: datasets
+    description: BigQuery Dataset operations
+  - name: catalog
+    description: Catalog summary operations
+paths:
+  /datasets:
+    get:
+      operationId: listDatasets
+      tags: [datasets]
+      summary: List all BigQuery datasets
+      description: Returns all datasets from the configured GCP project with Hebrew descriptions
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Filter datasets by name
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [name, tables_count]
+          description: Sort field
+        - name: sort_dir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: Sort direction
+      responses:
+        "200":
+          description: List of datasets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatasetList"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /datasets/{dataset_id}:
+    get:
+      operationId: getDataset
+      tags: [datasets]
+      summary: Get a specific dataset
+      parameters:
+        - name: dataset_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dataset detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dataset"
+        "404":
+          description: Dataset not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /catalog/stats:
+    get:
+      operationId: getCatalogStats
+      tags: [catalog]
+      summary: Get catalog summary statistics
+      description: Returns high-level statistics about the data catalog
+      responses:
+        "200":
+          description: Catalog statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogStats"
+  /catalog/locations:
+    get:
+      operationId: listLocations
+      tags: [catalog]
+      summary: List unique dataset locations
+      responses:
+        "200":
+          description: Unique locations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationList"
+
+components:
+  schemas:
+    Dataset:
+      type: object
+      required:
+        - dataset_id
+        - location
+        - tables_count
+        - created_at
+      properties:
+        dataset_id:
+          type: string
+        description:
+          type: ["string", "null"]
+        description_he:
+          type: ["string", "null"]
+        location:
+          type: string
+        tables_count:
+          type: integer
+        created_at:
+          type: string
+    DatasetList:
+      type: object
+      required:
+        - datasets
+        - total
+      properties:
+        datasets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Dataset"
+        total:
+          type: integer
+    CatalogStats:
+      type: object
+      required:
+        - total_datasets
+        - total_tables
+        - locations_count
+        - project_id
+      properties:
+        total_datasets:
+          type: integer
+        total_tables:
+          type: integer
+        locations_count:
+          type: integer
+        project_id:
+          type: string
+        last_updated:
+          type: ["string", "null"]
+    LocationList:
+      type: object
+      required:
+        - locations
+      properties:
+        locations:
+          type: array
+          items:
+            type: string
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string

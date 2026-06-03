@@ -1,0 +1,18 @@
+kind = "api"
+previewPath = "/catalog-api"
+title = "Data Catalog API (Python)"
+version = "1.0.0"
+id = "artifacts/data-catalog-api"
+
+[[services]]
+localPort = 8000
+name = "catalog-api"
+paths = ["/catalog-api"]
+
+[services.development]
+run = "cd artifacts/data-catalog-api && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+[services.production]
+
+[services.production.health.startup]
+path = "/catalog-api/healthz"
