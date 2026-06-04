@@ -7,8 +7,8 @@ import createCache from "@emotion/cache";
 import rtlPlugin from "stylis-plugin-rtl";
 import { theme } from "./theme";
 import CatalogPage from "./pages/CatalogPage";
+import DatasetPage from "./pages/DatasetPage";
 
-// Create RTL cache
 const cacheRtl = createCache({
   key: "muirtl",
   stylisPlugins: [rtlPlugin],
@@ -27,6 +27,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={CatalogPage} />
+      <Route path="/dataset/:dataset_id" component={DatasetPage} />
       <Route>
         <div style={{ padding: 20, textAlign: 'center' }}>
           <h2>404 - עמוד לא נמצא</h2>

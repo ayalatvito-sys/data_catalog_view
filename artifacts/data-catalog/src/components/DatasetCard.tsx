@@ -1,80 +1,5 @@
-// import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
-// import { TableChart, Place, Event } from '@mui/icons-material';
-// import { Dataset } from '@workspace/api-client-react';
-
-// interface DatasetCardProps {
-//   dataset: Dataset;
-// }
-
-// export default function DatasetCard({ dataset }: DatasetCardProps) {
-//   return (
-//     <Card 
-//       elevation={0}
-//       sx={{ 
-//         height: '100%',
-//         display: 'flex',
-//         flexDirection: 'column',
-//         border: '1px solid #dadce0',
-//         borderRadius: 2,
-//         transition: 'all 0.2s ease-in-out',
-//         borderRight: '4px solid transparent', // Left border highlight in RTL is borderRight
-//         '&:hover': {
-//           borderRightColor: 'primary.main',
-//           boxShadow: '0 4px 6px rgba(32,33,36,0.1)',
-//           transform: 'translateY(-2px)'
-//         }
-//       }}
-//     >
-//       <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
-//         <Typography 
-//           variant="subtitle1" 
-//           component="h2" 
-//           dir="ltr"
-//           sx={{ 
-//             fontFamily: '"Roboto Mono", monospace', 
-//             fontWeight: 500,
-//             mb: 1,
-//             color: '#1a73e8',
-//             textAlign: 'left'
-//           }}
-//         >
-//           {dataset.dataset_id}
-//         </Typography>
-        
-//         <Typography 
-//           variant="body2" 
-//           color={dataset.description_he ? 'text.primary' : 'text.disabled'}
-//           sx={{ mb: 3, minHeight: 40, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-//         >
-//           {dataset.description_he || 'אין תיאור'}
-//         </Typography>
-
-//         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 'auto' }}>
-//           <Chip 
-//             icon={<TableChart fontSize="small" />} 
-//             label={`${dataset.tables_count} טבלאות`}
-//             size="small"
-//             variant="outlined"
-//             sx={{ direction: 'rtl' }}
-//           />
-//           <Chip 
-//             icon={<Place fontSize="small" />} 
-//             label={dataset.location}
-//             size="small"
-//             variant="outlined"
-//           />
-//           <Chip 
-//             icon={<Event fontSize="small" />} 
-//             label={new Date(dataset.created_at).toLocaleDateString('he-IL')}
-//             size="small"
-//             variant="outlined"
-//           />
-//         </Box>
-//       </CardContent>
-//     </Card>
-//   );
-// }
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import {
   Card, CardContent, Typography, Box, Chip,
   Tooltip, Dialog, DialogTitle, DialogContent, IconButton
@@ -88,18 +13,21 @@ interface DatasetCardProps {
 
 export default function DatasetCard({ dataset }: DatasetCardProps) {
   const [open, setOpen] = useState(false);
+  const [, navigate] = useLocation();
   const hasDesc = !!dataset.description_he;
 
   return (
     <>
       <Card
         elevation={0}
+        onClick={() => navigate(`/dataset/${dataset.dataset_id}`)}
         sx={{
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           border: '1px solid #dadce0',
           borderRadius: 2,
+          cursor: 'pointer',
           transition: 'all 0.2s ease-in-out',
           borderRight: '4px solid transparent',
           '&:hover': {
@@ -111,7 +39,6 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
       >
         <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
 
-          {/* שם ה-Dataset — גלילה אופקית אם ארוך */}
           <Tooltip title={dataset.dataset_id} placement="top" arrow>
             <Typography
               variant="subtitle1"
@@ -132,7 +59,6 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
             </Typography>
           </Tooltip>
 
-          {/* תיאור — 2 שורות + כפתור "קרא עוד" */}
           <Box sx={{ mb: 3, minHeight: 48, position: 'relative' }}>
             <Typography
               variant="body2"
@@ -151,7 +77,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
             {hasDesc && (
               <IconButton
                 size="small"
-                onClick={() => setOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setOpen(true); }}
                 sx={{ position: 'absolute', top: -4, left: 0, color: 'text.secondary' }}
                 title="קרא תיאור מלא"
               >
@@ -160,7 +86,6 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
             )}
           </Box>
 
-          {/* Chips */}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 'auto' }}>
             <Chip
               icon={<TableChart fontSize="small" />}
@@ -185,7 +110,6 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
         </CardContent>
       </Card>
 
-      {/* דיאלוג תיאור מלא */}
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography fontFamily='"Roboto Mono", monospace' color="primary">
