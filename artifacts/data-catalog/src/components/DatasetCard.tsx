@@ -4,17 +4,23 @@ import {
   Card, CardContent, Typography, Box, Chip,
   Tooltip, Dialog, DialogTitle, DialogContent, IconButton
 } from '@mui/material';
-import { TableChart, Place, Event, Close, InfoOutlined } from '@mui/icons-material';
+import { TableChart, Place, Update, Close, InfoOutlined } from '@mui/icons-material';
 import { Dataset } from '@workspace/api-client-react';
 
 interface DatasetCardProps {
-  dataset: Dataset;
+  dataset: Dataset & { last_modified?: string | null };
 }
 
 export default function DatasetCard({ dataset }: DatasetCardProps) {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
   const hasDesc = !!dataset.description_he;
+
+  const displayDate = dataset.last_modified
+    ? new Date(dataset.last_modified).toLocaleDateString('he-IL')
+    : new Date(dataset.created_at).toLocaleDateString('he-IL');
+
+  const dateLabel = dataset.last_modified ? 'עודכן' : 'נוצר';
 
   return (
     <>
@@ -100,12 +106,16 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
               size="small"
               variant="outlined"
             />
-            <Chip
-              icon={<Event fontSize="small" />}
-              label={new Date(dataset.created_at).toLocaleDateString('he-IL')}
-              size="small"
-              variant="outlined"
-            />
+            <Tooltip title={dateLabel} arrow>
+              <Chip
+                icon={<Update fontSize="small" />}
+                label={displayDate}
+                size="small"
+                variant="outlined"
+                color={dataset.last_modified ? 'primary' : 'default'}
+                sx={{ opacity: dataset.last_modified ? 1 : 0.7 }}
+              />
+            </Tooltip>
           </Box>
         </CardContent>
       </Card>
