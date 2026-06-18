@@ -164,11 +164,14 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
-  artifacts/api-server:
+  artifacts/api-server-OLD:
     dependencies:
       '@google-cloud/bigquery':
         specifier: ^8.3.1
         version: 8.3.1
+      '@google-cloud/datacatalog':
+        specifier: ^5.2.2
+        version: 5.2.2
       '@google-cloud/translate':
         specifier: ^9.4.1
         version: 9.4.1
@@ -852,6 +855,10 @@ packages:
 
   '@google-cloud/common@6.0.0':
     resolution: {integrity: sha512-IXh04DlkLMxWgYLIUYuHHKXKOUwPDzDgke1ykkkJPe48cGIS9kkL2U/o0pm4ankHLlvzLF/ma1eO86n/bkumIA==}
+    engines: {node: '>=18'}
+
+  '@google-cloud/datacatalog@5.2.2':
+    resolution: {integrity: sha512-Z4VV/qr6O2ZGqF2YrLAAeDndCzYgDrUtkXs5T8tOr/YaKCUeckONHvBOhkBsrkZcPxAj53LLUCLKHwZr9WU0gg==}
     engines: {node: '>=18'}
 
   '@google-cloud/paginator@6.0.0':
@@ -3572,6 +3579,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -4052,6 +4060,12 @@ snapshots:
       html-entities: 2.6.0
       retry-request: 8.0.2
       teeny-request: 10.1.2
+    transitivePeerDependencies:
+      - supports-color
+
+  '@google-cloud/datacatalog@5.2.2':
+    dependencies:
+      google-gax: 5.0.6
     transitivePeerDependencies:
       - supports-color
 

@@ -43,3 +43,27 @@ _Populate as you build — sharp edges, "always run X before Y" rules._
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+
+
+npm install -g pnpm
+pnpm install
+
+node:
+export PORT=5000
+export GOOGLE_CLOUD_PROJECT=dgt-gcp-econ-dev-datalake
+pnpm --filter @workspace/api-server run dev
+
+python:
+cd artifacts/data-catalog-api
+pip install -r requirements.txt --break-system-packages
+uvicorn main:app --host 0.0.0.0 --port 5000 --reload
+
+react:
+cd ~/data_catalog_view
+pnpm --filter @workspace/data-catalog run dev
+
+
+
+pnpm --filter @workspace/api-server add @google-cloud/datacatalog
+
+fuser -k 5000/tcp

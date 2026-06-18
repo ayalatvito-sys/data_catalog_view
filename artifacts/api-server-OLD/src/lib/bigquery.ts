@@ -58,23 +58,6 @@ export interface DatasetRow {
   last_modified: string | null;  // תאריך הטבלה הכי מעודכנת
 }
 
-// ─── Last modified per dataset from Dataplex ──────────────────────────────────
-async function fetchLastModifiedMap(): Promise<Map<string, string>> {
-  const projectId = getProjectId();
-  const query = `
-    SELECT dataset_id, CAST(MAX(last_modified) AS STRING) as latest_update
-    FROM \`${projectId}.dataplex_insights_outputs.insights_table_details\`
-    GROUP BY dataset_id
-  `;
-  const [rows] = await bq.query({ query });
-  const map = new Map<string, string>();
-  for (const row of rows) {
-    if (row.dataset_id && row.latest_update) {
-      map.set(row.dataset_id, row.latest_update);
-    }
-  }
-  return map;
-}
 
 // ─── List Datasets ────────────────────────────────────────────────────────────
 export async function listDatasets(): Promise<DatasetRow[]> {
@@ -83,7 +66,6 @@ export async function listDatasets(): Promise<DatasetRow[]> {
 
   const projectId = getProjectId();
   const [datasets] = await bq.getDatasets({ projectId });
-  const lastModifiedMap = await fetchLastModifiedMap();
 
   const filtered = datasets.filter((ds) => !EXCLUDED_DATASETS.has(ds.id ?? ""));
 
@@ -102,7 +84,9 @@ export async function listDatasets(): Promise<DatasetRow[]> {
         created_at: meta.creationTime
           ? new Date(Number(meta.creationTime)).toISOString()
           : new Date().toISOString(),
-        last_modified: lastModifiedMap.get(ds.id ?? "") ?? null,
+        last_modified: meta.lastModifiedTime
+          ? new Date(Number(meta.lastModifiedTime)).toISOString()
+          : null,
       } as DatasetRow;
     })
   );
@@ -126,7 +110,6 @@ export async function getDataset(datasetId: string): Promise<DatasetRow | null> 
     const [tables] = await ds.getTables();
     const description = meta.description ?? null;
     const description_he = await translateToHebrew(description);
-    const lastModifiedMap = await fetchLastModifiedMap();
     return {
       dataset_id: datasetId,
       description,
@@ -136,7 +119,9 @@ export async function getDataset(datasetId: string): Promise<DatasetRow | null> 
       created_at: meta.creationTime
         ? new Date(Number(meta.creationTime)).toISOString()
         : new Date().toISOString(),
-      last_modified: lastModifiedMap.get(datasetId) ?? null,
+      last_modified: meta.lastModifiedTime
+        ? new Date(Number(meta.lastModifiedTime)).toISOString()
+        : null,
     };
   } catch {
     return null;
