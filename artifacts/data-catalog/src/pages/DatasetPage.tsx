@@ -404,7 +404,8 @@ import { useRoute, useLocation } from 'wouter';
 import {
   Box, Typography, Chip, IconButton, Tabs, Tab,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, CircularProgress, Alert, Tooltip, AppBar, Toolbar, Badge
+  Paper, CircularProgress, Alert, Tooltip, AppBar, Toolbar, Badge,
+  Select, MenuItem
 } from '@mui/material';
 import {
   ArrowBack, TableChart, AccountTree, Circle,
@@ -797,35 +798,7 @@ export default function DatasetPage() {
                   </Tabs>
                 )}
 
-                {/* --- אזור תגיות סינון מערכות (מוצג רק אם יש מעל מערכת אחת) --- */}
-                {uniqueSystems.length > 1 && (
-                  <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                      מערכת:
-                    </Typography>
-                    <Chip 
-                      label="הכל" 
-                      onClick={() => setActiveSystem('הכל')}
-                      color={activeSystem === 'הכל' ? 'primary' : 'default'}
-                      variant={activeSystem === 'הכל' ? 'filled' : 'outlined'}
-                      clickable
-                      sx={{ fontWeight: activeSystem === 'הכל' ? 'bold' : 'normal' }}
-                    />
-                    {uniqueSystems.map(sys => (
-                      <Chip 
-                        key={sys}
-                        label={sys} 
-                        onClick={() => setActiveSystem(sys)}
-                        color={activeSystem === sys ? 'primary' : 'default'}
-                        variant={activeSystem === sys ? 'filled' : 'outlined'}
-                        clickable
-                        sx={{ fontWeight: activeSystem === sys ? 'bold' : 'normal' }}
-                      />
-                    ))}
-                  </Box>
-                )}
-
-                {/* --- אזור תצוגת פרטי הפרויקט והמערכת --- */}
+                {/* --- אזור תצוגת פרטי הפרויקט והמערכת (סימטרי ומיושר) --- */}
                 {finalDisplayedTables.length > 0 && (
                   <Paper 
                     elevation={0} 
@@ -837,37 +810,75 @@ export default function DatasetPage() {
                       bgcolor: '#fff', 
                       display: 'flex', 
                       gap: 4, 
-                      flexWrap: 'wrap' 
+                      flexWrap: 'wrap',
+                      alignItems: 'flex-start'
                     }}
                   >
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                       <Typography variant="caption" color="text.secondary" display="block">שם פרויקט</Typography>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: '#202124', fontSize: '0.95rem' }}>
+                      <Typography variant="body2" fontWeight="bold" sx={{ color: '#202124', fontSize: '0.95rem', mt: 0.2 }}>
                         {finalDisplayedTables[0].project_name || 'כללי'}
                       </Typography>
                     </Box>
 
-                    {/* מציג את שם המערכת הספציפית, או "מספר מערכות" אם צופים בהכל */}
-                    {displaySystemName !== 'לא הוגדר' && (
-                      <Box>
+                    {/* --- התצוגה החכמה של שם המערכת --- */}
+                    {uniqueSystems.length > 1 ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="caption" color="text.secondary" display="block">שם מערכת</Typography>
-                        <Typography variant="body2" sx={{ color: '#202124', fontSize: '0.95rem' }}>
+                        <Select
+                          value={activeSystem}
+                          onChange={(e) => setActiveSystem(e.target.value)}
+                          variant="standard"
+                          disableUnderline
+                          sx={{ 
+                            color: '#1a73e8', // כחול קליקבילי
+                            fontWeight: 'bold', 
+                            fontSize: '0.95rem',
+                            mt: 0.2, // מרווח קטן כדי להיות בול באותו גובה של שאר השורות
+                            '& .MuiSelect-select': { 
+                              py: 0, 
+                              pl: 3, // משאיר מקום לחץ משמאל (RTL)
+                              pr: 0, 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              backgroundColor: 'transparent !important'
+                            },
+                            '& .MuiSvgIcon-root': {
+                              right: 'auto',
+                              left: 0,
+                              color: '#1a73e8' // צובע גם את החץ בכחול
+                            }
+                          }}
+                        >
+                          <MenuItem value="הכל">
+                            <em>כל המערכות ({uniqueSystems.length})</em>
+                          </MenuItem>
+                          {uniqueSystems.map(sys => (
+                            <MenuItem key={sys} value={sys}>{sys}</MenuItem>
+                          ))}
+                        </Select>
+                      </Box>
+                    ) : displaySystemName !== 'לא הוגדר' ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="caption" color="text.secondary" display="block">שם מערכת</Typography>
+                        <Typography variant="body2" sx={{ color: '#202124', fontSize: '0.95rem', mt: 0.2 }}>
                           {displaySystemName}
                         </Typography>
                       </Box>
-                    )}
+                    ) : null}
+                    {/* ----------------------------------- */}
 
-                    <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                       <Typography variant="caption" color="text.secondary" display="block">מנהל פרויקט</Typography>
-                      <Typography variant="body2" sx={{ color: '#202124', fontSize: '0.95rem' }}>
+                      <Typography variant="body2" sx={{ color: '#202124', fontSize: '0.95rem', mt: 0.2 }}>
                         {finalDisplayedTables[0].project_manager || 'לא הוגדר'}
                       </Typography>
                     </Box>
 
                     {finalDisplayedTables[0].characterization_link && (
-                      <Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="caption" color="text.secondary" display="block">אפיון</Typography>
-                        <Typography variant="body2" sx={{ fontSize: '0.95rem' }}>
+                        <Typography variant="body2" sx={{ fontSize: '0.95rem', mt: 0.2 }}>
                           <a href={finalDisplayedTables[0].characterization_link} target="_blank" rel="noreferrer" style={{ color: '#1a73e8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             מסמך אפיון
                           </a>
