@@ -199,6 +199,23 @@ async def list_tables(dataset_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── Relationships ────────────────────────────────────────────────────────────
+ 
+@router.get("/datasets/{dataset_id}/relationships", response_model=RelationshipList)
+async def list_relationships(
+    dataset_id: str,
+    min_confidence: float = Query(0.5, ge=0.0, le=1.0),
+):
+    require_bq()
+    try:
+        rels = await bq_service.list_relationships(dataset_id, min_confidence)
+        return RelationshipList(relationships=rels, total=len(rels))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error listing relationships for %s", dataset_id)
+        raise HTTPException(status_code=500, detail=str(e))
+ 
 # ─── Catalog ──────────────────────────────────────────────────────────────────
 
 @router.get("/catalog/stats", response_model=CatalogStats)
