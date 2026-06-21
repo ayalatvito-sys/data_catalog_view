@@ -26,6 +26,9 @@ EXCLUDED_DATASETS = {
     "admin",
     "metrics",
 }
+
+# דגל לשליטה האם לדלג על טבלאות שכבר תויגו (מומלץ לשים True בשוטף, ו-False כשמוסיפים שדות חדשים למודל)
+SKIP_ALREADY_TAGGED = True
 # ─────────────────────────────────────────────
 
 def extract_schema(fields, prefix=""):
@@ -44,26 +47,52 @@ def extract_schema(fields, prefix=""):
             
     return schema_list
 
+# def extract_bigquery_metadata(bq_client: bigquery.Client, project: str, dataset: str, table: str) -> dict:
+#     """שליפת הסכמה ומדגם נתונים מ-BigQuery"""
+#     table_ref = f"{project}.{dataset}.{table}"
+#     bq_table  = bq_client.get_table(table_ref)
+
+#     # שימוש בפונקציה הרקורסיבית החדשה
+#     schema = extract_schema(bq_table.schema)
+
+#     query = f"SELECT * FROM `{table_ref}` LIMIT {SAMPLE_ROWS}"
+#     rows = list(bq_client.query(query).result())
+#     sample_rows = [dict(row) for row in rows]
+
+#     # המרה לטקסט כדי למנוע שגיאות סריאליזציה ב-JSON
+#     for row in sample_rows:
+#         for k, v in row.items():
+#             if not isinstance(v, (str, int, float, bool, type(None))):
+#                 row[k] = str(v)
+
+#     return {"schema": schema, "sample_rows": sample_rows}
 def extract_bigquery_metadata(bq_client: bigquery.Client, project: str, dataset: str, table: str) -> dict:
-    """שליפת הסכמה ומדגם נתונים מ-BigQuery"""
+    """שליפת הסכמה ומדגם נתונים מ-BigQuery עם הגנת אורך (Truncation) ושמירה על סוגי נתונים"""
     table_ref = f"{project}.{dataset}.{table}"
     bq_table  = bq_client.get_table(table_ref)
 
-    # שימוש בפונקציה הרקורסיבית החדשה
+    # שימוש בפונקציה הרקורסיבית (בהנחה שקיימת אצלך בקובץ)
     schema = extract_schema(bq_table.schema)
 
     query = f"SELECT * FROM `{table_ref}` LIMIT {SAMPLE_ROWS}"
     rows = list(bq_client.query(query).result())
     sample_rows = [dict(row) for row in rows]
 
-    # המרה לטקסט כדי למנוע שגיאות סריאליזציה ב-JSON
+    # חיתוך מחרוזות מפלצתיות תוך שמירה על טיפוסי הנתונים המקוריים
     for row in sample_rows:
         for k, v in row.items():
-            if not isinstance(v, (str, int, float, bool, type(None))):
-                row[k] = str(v)
+            if isinstance(v, (str, int, float, bool, type(None))):
+                normalized = v
+            else:
+                normalized = str(v)
+
+            # מבצעים חיתוך אך ורק אם זה טקסט והוא ארוך מדי
+            if isinstance(normalized, str) and len(normalized) > 500:
+                normalized = normalized[:500] + "... [TRUNCATED]"
+
+            row[k] = normalized
 
     return {"schema": schema, "sample_rows": sample_rows}
-
 def analyze_with_gemini(genai_client, metadata: dict) -> dict:
     """ניתוח סמנטי ב-Gemini כולל ולידציה נוקשה ומנגנון Retry"""
     schema_str = json.dumps(metadata["schema"], indent=2)
@@ -163,16 +192,46 @@ def update_dataplex_aspect(dataplex_client, project: str, dataset: str, table: s
     updated = dataplex_client.update_entry(request=request)
     print(f"      ✅ Applied aspect to: {updated.name.split('/')[-1]}")
 
+def is_table_already_tagged(dataplex_client, project: str, dataset: str, table: str, location: str, aspect_type_id: str) -> bool:
+    """בודק ב-Dataplex האם הטבלה כבר עברה קטלוג, כדי לחסוך עלויות AI"""
+    entry_name = f"projects/{project}/locations/{location}/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}"
+    aspect_type_name = f"projects/{project}/locations/{location}/aspectTypes/{aspect_type_id}"
+    
+    try:
+        # מבקשים מגוגל את הרשומה, ורק את האספקט הספציפי שלנו
+        request = dataplex_v1.GetEntryRequest(
+            name=entry_name,
+            view=dataplex_v1.EntryView.CUSTOM,
+            aspect_types=[aspect_type_name]
+        )
+        entry = dataplex_client.get_entry(request=request)
+        
+        # --- התיקון הקריטי: חיפוש לפי סיומת במקום שם פרויקט מפורש ---
+        if entry.aspects:
+            for key in entry.aspects.keys():
+                if key.endswith(f".{aspect_type_id}"):
+                    return True
+                    
+        return False
+        
+    except Exception:
+        # אם יש שגיאה 404 (הרשומה עדיין לא נוצרה ב-Dataplex) או כל בעיה אחרת, נניח שלא תויג
+        return False
+
 def main():
     print(f"🚀 Starting Project-Wide BQ Classification: {PROJECT_ID}")
     
     bq_client = bigquery.Client(project=PROJECT_ID)
     dataplex_client = dataplex_v1.CatalogServiceClient()
-    genai_client = genai.Client(vertexai=True)
+    genai_client = genai.Client(
+        vertexai=True,
+        project=PROJECT_ID)
 
     datasets = list(bq_client.list_datasets())
     processed_tables_count = 0
-    
+
+    skipped_tables_count = 0
+
     for dataset in datasets:
         if processed_tables_count >= MAX_TABLES_TO_PROCESS:
             print(f"\n⏹️ Reached MAX_TABLES_TO_PROCESS limit ({MAX_TABLES_TO_PROCESS}). Stopping execution.")
@@ -197,6 +256,13 @@ def main():
             if table.table_type != "TABLE":
                 print(f"   ⏭️ Skipping non-table object: {table_id} (Type: {table.table_type})")
                 continue
+
+            # --- שימוש בדגל החדש לבדיקה אם לדלג ---
+            if SKIP_ALREADY_TAGGED and is_table_already_tagged(dataplex_client, PROJECT_ID, dataset_id, table_id, DATAPLEX_LOCATION, ASPECT_TYPE_ID):
+                print(f"   💸 Skipping table {table_id} (Already tagged in Dataplex)")
+                skipped_tables_count += 1
+                continue
+            # ----------------------------------------
                 
             print(f"   ⏳ Analyzing table: {table_id}...")
             
