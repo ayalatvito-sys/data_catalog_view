@@ -86,8 +86,13 @@ class DataplexService:
                 fin_val = ui_data.get("is-financial") or ui_data.get("is_financial") or False
                 geo_val = ui_data.get("is-geographical") or ui_data.get("is_geographical") or False
                 sen_val = ui_data.get("is-sensitive") or ui_data.get("is_sensitive") or False
+
+                fin_cols = ui_data.get("financial-columns") or ui_data.get("financial_columns") or ""
+                geo_cols = ui_data.get("geographical-columns") or ui_data.get("geographical_columns") or ""
+                sen_cols = ui_data.get("sensitive-columns") or ui_data.get("sensitive_columns") or ""
             else:
                 fin_val = geo_val = sen_val = False
+                fin_cols = geo_cols = sen_cols = ""
 
             # שליפת הנתונים מתיוג הפרויקטים שלנו
             matched_tasks_key = next((k for k in aspects.keys() if k.endswith(".db-tasks-information")), None)
@@ -103,8 +108,11 @@ class DataplexService:
 
             return {
                 "is_financial":    bool(fin_val),
+                "financial_columns": fin_cols,
                 "is_geographical": bool(geo_val),
+                "geographical_columns": geo_cols,
                 "is_sensitive":    bool(sen_val),
+                "sensitive_columns": sen_cols,
                 "project_name": project_name,
                 "system_name": system_name,
                 "project_manager": project_manager,
@@ -229,8 +237,13 @@ class DataplexService:
                     fin_val = ui_data.get("is-financial") or ui_data.get("is_financial") or False
                     geo_val = ui_data.get("is-geographical") or ui_data.get("is_geographical") or False
                     sen_val = ui_data.get("is-sensitive") or ui_data.get("is_sensitive") or False
+
+                    fin_cols = ui_data.get("financial-columns") or ui_data.get("financial_columns") or ""
+                    geo_cols = ui_data.get("geographical-columns") or ui_data.get("geographical_columns") or ""
+                    sen_cols = ui_data.get("sensitive-columns") or ui_data.get("sensitive_columns") or ""
                 else:
                     fin_val = geo_val = sen_val = False
+                    fin_cols = geo_cols = sen_cols = ""
 
                 # שליפת הנתונים מתיוג הפרויקטים שלנו
                 project_name = "כללי"
@@ -245,8 +258,11 @@ class DataplexService:
 
                 return {
                     "is_financial":    bool(fin_val),
+                    "financial_columns": fin_cols,
                     "is_geographical": bool(geo_val),
+                    "geographical_columns": geo_cols,
                     "is_sensitive":    bool(sen_val),
+                    "sensitive_columns": sen_cols,
                     "project_name": project_name,
                     "system_name": system_name,
                     "project_manager": project_manager,

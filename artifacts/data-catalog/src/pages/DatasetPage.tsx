@@ -421,8 +421,11 @@ interface TableDetail {
   size_bytes: number;
   last_modified: string;
   is_financial: boolean;
+  financial_columns?: string;
   is_geographical: boolean;
+  geographical_columns?: string;
   is_sensitive: boolean;
+  sensitive_columns?: string;
   project_name: string;
   system_name?: string;
   project_manager?: string;
@@ -454,23 +457,61 @@ function confidenceColor(score: number): string {
   return '#d93025';
 }
 
-// ─── Table Icons ──────────────────────────────────────────────────────────────
+// ─── Table Icons (מעודכן עם חשיפת עמודות) ──────────────────────────────────
 function TableIcons({ table }: { table: TableDetail }) {
   return (
     <Box sx={{ display: 'flex', gap: 0.5 }}>
       {table.is_financial && (
-        <Tooltip title="נתונים פיננסיים" arrow>
-          <AttachMoney sx={{ fontSize: 18, color: '#1e8e3e' }} />
+        <Tooltip 
+          arrow 
+          title={
+            <Box sx={{ p: 0.5, maxWidth: 250 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                נתונים פיננסיים
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#e8eaed', display: 'block', lineHeight: 1.4 }}>
+                <strong>עמודות:</strong> {table.financial_columns || 'לא צוין'}
+              </Typography>
+            </Box>
+          }
+        >
+          <AttachMoney sx={{ fontSize: 18, color: '#1e8e3e', cursor: 'help' }} />
         </Tooltip>
       )}
+
       {table.is_geographical && (
-        <Tooltip title="נתונים גאוגרפיים" arrow>
-          <LocationOn sx={{ fontSize: 18, color: '#1a73e8' }} />
+        <Tooltip 
+          arrow 
+          title={
+            <Box sx={{ p: 0.5, maxWidth: 250 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                נתונים גאוגרפיים
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#e8eaed', display: 'block', lineHeight: 1.4 }}>
+                <strong>עמודות:</strong> {table.geographical_columns || 'לא צוין'}
+              </Typography>
+            </Box>
+          }
+        >
+          <LocationOn sx={{ fontSize: 18, color: '#1a73e8', cursor: 'help' }} />
         </Tooltip>
       )}
+
       {table.is_sensitive && (
-        <Tooltip title="נתונים רגישים" arrow>
-          <Security sx={{ fontSize: 18, color: '#d93025' }} />
+        <Tooltip 
+          arrow 
+          title={
+            <Box sx={{ p: 0.5, maxWidth: 250 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                נתונים רגישים (PII)
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#e8eaed', display: 'block', lineHeight: 1.4 }}>
+                <strong>עמודות:</strong> {table.sensitive_columns || 'לא צוין'}
+              </Typography>
+            </Box>
+          }
+        >
+          <Security sx={{ fontSize: 18, color: '#d93025', cursor: 'help' }} />
         </Tooltip>
       )}
     </Box>

@@ -39,6 +39,9 @@ class TableDetail(BaseModel):
     is_financial: bool = False
     is_geographical: bool = False
     is_sensitive: bool = False
+    financial_columns: Optional[str] = None
+    geographical_columns: Optional[str] = None
+    sensitive_columns: Optional[str] = None
     # --- השדות החדשים מהתיוג שלנו ---
     project_name: str = "כללי"
     system_name: Optional[str] = None

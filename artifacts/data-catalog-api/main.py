@@ -163,8 +163,11 @@ async def list_tables(dataset_id: str):
                 # כן! נחיל אותם על כל הטבלאות במהירות
                 for t in tables:
                     t.is_financial    = dataset_aspects.get("is_financial", False)
+                    t.financial_columns = dataset_aspects.get("financial_columns", "")
                     t.is_geographical = dataset_aspects.get("is_geographical", False)
+                    t.geographical_columns = dataset_aspects.get("geographical_columns", "")
                     t.is_sensitive    = dataset_aspects.get("is_sensitive", False)
+                    t.sensitive_columns = dataset_aspects.get("sensitive_columns", "")
                     t.project_name    = dataset_aspects.get("project_name", "כללי")
                     t.system_name     = dataset_aspects.get("system_name")
                     t.project_manager = dataset_aspects.get("project_manager")
@@ -184,8 +187,11 @@ async def list_tables(dataset_id: str):
                         aspects = {}
                         
                     t.is_financial    = aspects.get("is_financial", False)
+                    t.financial_columns = aspects.get("financial_columns", "")
                     t.is_geographical = aspects.get("is_geographical", False)
+                    t.geographical_columns = aspects.get("geographical_columns", "")
                     t.is_sensitive    = aspects.get("is_sensitive", False)
+                    t.sensitive_columns = aspects.get("sensitive_columns", "")
                     t.project_name    = aspects.get("project_name", "כללי")
                     t.system_name     = aspects.get("system_name")
                     t.project_manager = aspects.get("project_manager")
