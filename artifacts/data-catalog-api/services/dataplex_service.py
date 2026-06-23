@@ -133,75 +133,27 @@ class DataplexService:
             None, self._fetch_dataset_aspects, dataset_id
         )
 
-    # def _fetch_dataset_aspects(self, dataset_id: str) -> dict:
-    #     defaults = {"is_financial": False, "is_geographical": False, "is_sensitive": False}
-    #     try:
-    #         proj = self.project_id
-    #         # שים לב: ה-entry_name נעצר ברמת ה-dataset ולא יורד לטבלה
-    #         entry_name = (
-    #             f"projects/{proj}/locations/{self.location}"
-    #             f"/entryGroups/@bigquery/entries/"
-    #             f"bigquery.googleapis.com/projects/{proj}"
-    #             f"/datasets/{dataset_id}"
-    #         )
-            
-    #         from google.cloud import dataplex_v1
-            
-    #         aspect_type_path = f"projects/{proj}/locations/{self.location}/aspectTypes/ui-metadata"
-    #         tasks_aspect_path = f"projects/{proj}/locations/{self.location}/aspectTypes/db-tasks-information"
-            
-    #         request = dataplex_v1.GetEntryRequest(
-    #             name=entry_name,
-    #             view=dataplex_v1.EntryView.CUSTOM,
-    #             aspect_types=[aspect_type_path, tasks_aspect_path]
-    #         )
-            
-    #         entry = self._client.get_entry(request=request)
-    #         aspects = entry.aspects or {}
-            
-    #         # שליפת הנתונים מה-UI Metadata
-    #         matched_ui_key = next((k for k in aspects.keys() if k.endswith(".ui-metadata")), None)
-    #         if matched_ui_key and aspects[matched_ui_key].data:
-    #             ui_data = aspects[matched_ui_key].data
-    #             fin_val = ui_data.get("is-financial") or ui_data.get("is_financial") or False
-    #             geo_val = ui_data.get("is-geographical") or ui_data.get("is_geographical") or False
-    #             sen_val = ui_data.get("is-sensitive") or ui_data.get("is_sensitive") or False
-    #         else:
-    #             fin_val = geo_val = sen_val = False
-
-    #         # שליפת הנתונים מתיוג הפרויקטים שלנו
-    #         matched_tasks_key = next((k for k in aspects.keys() if k.endswith(".db-tasks-information")), None)
-    #         project_name = "כללי"
-    #         system_name = project_manager = characterization_link = None
-            
-    #         if matched_tasks_key and aspects[matched_tasks_key].data:
-    #             tasks_data = aspects[matched_tasks_key].data
-    #             project_name = tasks_data.get("project-name") or "כללי"
-    #             system_name = tasks_data.get("system-name")
-    #             project_manager = tasks_data.get("project-manager")
-    #             characterization_link = tasks_data.get("characterization-link")
-
-    #         return {
-    #             "is_financial":    bool(fin_val),
-    #             "is_geographical": bool(geo_val),
-    #             "is_sensitive":    bool(sen_val),
-    #             "project_name": project_name,
-    #             "system_name": system_name,
-    #             "project_manager": project_manager,
-    #             "characterization_link": characterization_link,
-    #         }
-            
-    #     except Exception as e:
-    #         logger.error("Aspects fetch failed for dataset %s: %s", dataset_id, e)
-    #         return defaults
-
     def _fetch_dataset_aspects(self, dataset_id: str) -> dict:
             # הוספנו את has_custom_aspects לערכי ברירת המחדל
-            defaults = {"is_financial": False, "is_geographical": False, "is_sensitive": False, "has_custom_aspects": False}
+            defaults = {"is_financial": False, "is_geographical": False, "is_sensitive": False, "has_custom_aspects": False, "description_en": None, "description_he": None}
             if not self._available:
                 return defaults
             try:
+                from google.cloud import dataplex_v1
+                from google.cloud import datacatalog_v1
+
                 proj = self.project_id
+
+                # --- 1. שליפת אנגלית מ-Data Catalog ---
+                catalog_client = datacatalog_v1.DataCatalogClient()
+                linked_resource = f"//bigquery.googleapis.com/projects/{proj}/datasets/{dataset_id}"
+                description_en = None
+                try:
+                    catalog_entry = catalog_client.lookup_entry(request={"linked_resource": linked_resource})
+                    description_en = catalog_entry.description
+                except Exception as e:
+                    logger.warning(f"Could not fetch Data Catalog description for {dataset_id}: {e}")
+
                 entry_name = (
                     f"projects/{proj}/locations/{self.location}"
                     f"/entryGroups/@bigquery/entries/"
@@ -209,24 +161,36 @@ class DataplexService:
                     f"/datasets/{dataset_id}"
                 )
                 
-                from google.cloud import dataplex_v1
-                
                 aspect_type_path = f"projects/{proj}/locations/{self.location}/aspectTypes/ui-metadata"
                 tasks_aspect_path = f"projects/{proj}/locations/{self.location}/aspectTypes/db-tasks-information"
-                
+                overview_full_path = "projects/dataplex-types/locations/global/aspectTypes/overview"
+                overview_map_key = "dataplex-types.global.overview"
+
                 request = dataplex_v1.GetEntryRequest(
                     name=entry_name,
                     view=dataplex_v1.EntryView.CUSTOM,
-                    aspect_types=[aspect_type_path, tasks_aspect_path]
+                    aspect_types=[aspect_type_path, tasks_aspect_path, overview_full_path]
                 )
                 
                 entry = self._client.get_entry(request=request)
                 aspects = entry.aspects or {}
-                
+
                 # זיהוי מפתחות
+                matched_overview_key = next((k for k in aspects.keys() if k.endswith(".overview")), None)
                 matched_ui_key = next((k for k in aspects.keys() if k.endswith(".ui-metadata")), None)
                 matched_tasks_key = next((k for k in aspects.keys() if k.endswith(".db-tasks-information")), None)
                 
+                # חילוץ עברית מתוך ה-Overview
+                description_he = None
+                if matched_overview_key and aspects[matched_overview_key].data:
+                    # המרה למילון כדי למנוע את שגיאת ה-NoneType
+                    overview_dict = dict(aspects[matched_overview_key].data)
+                    overview_content = overview_dict.get("content", "")
+                    
+                    header = "### Description translated into Hebrew"
+                    if header in overview_content:
+                        description_he = overview_content.split(header)[1].strip()
+
                 # --- הוספת דגל חכם ---
                 # אם מצאנו לפחות אחד מהמפתחות שלנו, זה אומר שיש הגדרות ברמת ה-DS
                 has_custom_aspects = bool(matched_ui_key or matched_tasks_key)
@@ -268,6 +232,8 @@ class DataplexService:
                     "project_manager": project_manager,
                     "characterization_link": characterization_link,
                     "has_custom_aspects": has_custom_aspects, # מחזירים את התשובה לראוטר
+                    "description_en": description_en,
+                    "description_he": description_he,
                 }
                 
             except Exception as e:

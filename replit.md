@@ -67,3 +67,11 @@ pnpm --filter @workspace/data-catalog run dev
 pnpm --filter @workspace/api-server add @google-cloud/datacatalog
 
 fuser -k 5000/tcp
+
+
+login:
+rm -rf ~/.config/gcloud/
+unset GOOGLE_APPLICATION_CREDENTIALS
+gcloud auth login
+gcloud auth application-default login --disable-quota-project
+gcloud config set project dgt-gcp-econ-dev-datalake
