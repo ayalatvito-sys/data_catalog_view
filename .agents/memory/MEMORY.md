@@ -1,0 +1,1 @@
+- [MUI v7 Box/Typography TS pattern](mui-box-sx.md) — all system shorthand props (display, mb, fontWeight…) must go inside sx={} not as direct JSX attrs.

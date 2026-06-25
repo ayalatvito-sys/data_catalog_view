@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Chip, Divider } from '@mui/material';
-import { ColumnProfile } from './types';
+import { ColumnProfile } from '../../types/profile';
 import { profileTokens, getNullnessTone } from './profileTokens';
 import MetricBar from './MetricBar';
 import StatsPanel from './StatsPanel';
@@ -10,6 +10,19 @@ interface ColumnCardProps {
   column: ColumnProfile;
 }
 
+/**
+ * Card for a single column profile.
+ *
+ * Visual DNA inherited from DatasetCard:
+ *  – white surface on #f8f9fa canvas
+ *  – 1px #dadce0 border, borderRadius: 2 (matches MUI shape.borderRadius)
+ *  – 4px transparent inline-start accent edge → semantic color on hover (RTL-logical)
+ *  – same soft shadow + translateY(-2px) lift recipe
+ *  – Heebo typography; monospace for identifiers
+ *
+ * The accent color is semantic: green (healthy) → amber (attention) → red (critical)
+ * based on the column's null percentage, giving an instant data-quality signal.
+ */
 const ColumnCard: React.FC<ColumnCardProps> = ({ column }) => {
   const nullness = column.nullness || 0;
   const uniqueness = column.uniqueness || 0;
@@ -18,18 +31,16 @@ const ColumnCard: React.FC<ColumnCardProps> = ({ column }) => {
   return (
     <Box
       sx={{
-        position: 'relative',
         bgcolor: profileTokens.color.surface,
-        border: '1px solid #dadce0',
-        borderRadius: 2, // ~12px, matches DatasetCard
+        border: `1px solid ${profileTokens.color.border}`,
+        borderRadius: profileTokens.radius.card,
         overflow: 'hidden',
-        // Same recipe as DatasetCard: transparent accent edge that reveals on hover,
-        // soft diffuse shadow instead of a hard border, gentle lift.
-        borderInlineStart: `4px solid transparent`,
+        // RTL-logical accent edge mirrors DatasetCard's borderRight pattern
+        borderInlineStart: '4px solid transparent',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
           borderInlineStartColor: tone.main,
-          boxShadow: '0 4px 6px rgba(32,33,36,0.1)',
+          boxShadow: profileTokens.shadow.card,
           transform: 'translateY(-2px)',
         },
       }}
@@ -42,10 +53,17 @@ const ColumnCard: React.FC<ColumnCardProps> = ({ column }) => {
           gap: { xs: 3, md: 4 },
         }}
       >
-        {/* Identity + headline metrics */}
+        {/* ── Identity + headline metrics ─────────────────────────────── */}
         <Box sx={{ width: { xs: '100%', md: 220 }, flexShrink: 0 }}>
-          <Box display="flex" alignItems="center" gap={1} mb={1} flexWrap="wrap">
-            <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                color: 'text.primary',
+                fontFamily: profileTokens.font.mono,
+              }}
+            >
               {column.column_name}
             </Typography>
           </Box>
@@ -55,7 +73,7 @@ const ColumnCard: React.FC<ColumnCardProps> = ({ column }) => {
               label={column.data_type}
               size="small"
               variant="outlined"
-              sx={{ mb: 2.5, fontWeight: 500 }}
+              sx={{ mb: 2.5, fontWeight: 500, fontFamily: profileTokens.font.mono }}
             />
           )}
 
@@ -68,19 +86,25 @@ const ColumnCard: React.FC<ColumnCardProps> = ({ column }) => {
           <MetricBar
             label="ייחודיות"
             value={uniqueness}
-            color={profileTokens.color.accent}
+            color={profileTokens.color.healthy}
             tooltip="אחוז הערכים השונים מתוך כל הערכים בעמודה"
           />
         </Box>
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
 
-        {/* Stats */}
+        {/* ── Statistics ──────────────────────────────────────────────── */}
         <Box sx={{ width: { xs: '100%', md: 260 }, flexShrink: 0 }}>
           <Typography
             variant="caption"
             color="text.secondary"
-            sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', display: 'block', mb: 1.5 }}
+            sx={{
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'block',
+              mb: 1.5,
+            }}
           >
             סטטיסטיקות
           </Typography>
@@ -89,12 +113,18 @@ const ColumnCard: React.FC<ColumnCardProps> = ({ column }) => {
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
 
-        {/* Top values */}
+        {/* ── Top Values ──────────────────────────────────────────────── */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             variant="caption"
             color="text.secondary"
-            sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', display: 'block', mb: 1.5 }}
+            sx={{
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              display: 'block',
+              mb: 1.5,
+            }}
           >
             ערכים נפוצים
           </Typography>

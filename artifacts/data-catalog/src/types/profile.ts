@@ -1,3 +1,6 @@
+// Shared TypeScript interfaces for the Table Profile feature.
+// Single source of truth — imported by both page and components.
+
 export interface TopNValue {
   value: string;
   percentage?: number;
