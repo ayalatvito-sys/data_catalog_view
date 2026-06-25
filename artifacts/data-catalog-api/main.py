@@ -242,9 +242,8 @@ from services.dataplex_service import DataplexService
 from models import (
     DatasetList, Dataset, CatalogStats, LocationList,
     TableList, RelationshipList,
-    TableProfileResponse, ColumnProfile, TopNValue, NumericStats
+    TableProfileResponse, ColumnProfile, TopNValue, NumericStats, StringStats, DatetimeStats
 )
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
