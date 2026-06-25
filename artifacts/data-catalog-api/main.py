@@ -241,7 +241,8 @@ from services.dataplex_service import DataplexService
 # מחיקנו את הייבוא של TranslationService!
 from models import (
     DatasetList, Dataset, CatalogStats, LocationList,
-    TableList, RelationshipList
+    TableList, RelationshipList,
+    TableProfileResponse, ColumnProfile, TopNValue, NumericStats
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -333,6 +334,85 @@ async def list_datasets(
         logger.exception("Error listing datasets")
         raise HTTPException(status_code=500, detail=str(e))
 
+#-----Table
+
+@router.get("/datasets/{dataset_id}/tables/{table_id}/profile", response_model=TableProfileResponse)
+async def get_table_profile(dataset_id: str, table_id: str):
+    require_bq()
+    try:
+        if not dataplex_service or not dataplex_service.is_available:
+            raise HTTPException(status_code=503, detail="Dataplex is not available")
+            
+        raw_profile = await dataplex_service.get_table_profiling(dataset_id, table_id)
+        
+        # 1. חילוץ מידע כללי על הריצה
+        scanned_rows = None
+        source_info = raw_profile.get("sourceDataInfo")
+        if source_info:
+            source_info_dict = dict(source_info)
+            scanned_rows = source_info_dict.get("scannedRows")
+
+        # 2. חילוץ סטטיסטיקות ברמת העמודה
+        columns_data = []
+        fields_map = raw_profile.get("fields")
+        
+        if fields_map:
+            fields_dict = dict(fields_map)
+            
+            for col_name, profile_record in fields_dict.items():
+                col_prof = dict(profile_record)
+                
+                # ערכים בסיסיים
+                nullness = col_prof.get("nullness", 0.0)
+                uniqueness = col_prof.get("uniqueness", 0.0)
+                
+                # ערכים נפוצים (Top N)
+                top_n_list = []
+                top_n_record = col_prof.get("topN")
+                if top_n_record:
+                    top_n_dict = dict(top_n_record)
+                    values = list(top_n_dict.get("values", []))
+                    percentages = list(top_n_dict.get("percentages", []))
+                    counts = list(top_n_dict.get("counts", []))
+                    
+                    for i, val in enumerate(values):
+                        top_n_list.append(TopNValue(
+                            value=str(val),
+                            percentage=percentages[i] if i < len(percentages) else None,
+                            count=counts[i] if i < len(counts) else None
+                        ))
+                
+                # נתונים נומריים (אם יש)
+                num_stats_obj = None
+                numeric_record = col_prof.get("numeric")
+                if numeric_record:
+                    num_dict = dict(numeric_record)
+                    num_stats_obj = NumericStats(
+                        min=num_dict.get("min"),
+                        max=num_dict.get("max"),
+                        avg=num_dict.get("avg"),
+                        stdDev=num_dict.get("stdDev"),
+                        median=num_dict.get("median")
+                    )
+                    
+                # צירוף העמודה לרשימה הסופית
+                columns_data.append(ColumnProfile(
+                    column_name=col_name,
+                    nullness=nullness,
+                    uniqueness=uniqueness,
+                    top_n=top_n_list,
+                    numeric_stats=num_stats_obj
+                ))
+        
+        return TableProfileResponse(
+            table_id=table_id,
+            scanned_rows=scanned_rows,
+            columns=columns_data
+        )
+        
+    except Exception as e:
+        logger.exception(f"Error fetching profile for {dataset_id}.{table_id}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/datasets/{dataset_id}", response_model=Dataset)
 async def get_dataset(dataset_id: str):
@@ -474,3 +554,4 @@ async def health_check():
 
 
 app.include_router(router)
+

@@ -239,3 +239,44 @@ class DataplexService:
             except Exception as e:
                 logger.error("Aspects fetch failed for dataset %s: %s", dataset_id, e)
                 return defaults
+
+    async def get_table_profiling(self, dataset_id: str, table_id: str) -> dict:
+        """שולף את הנתונים באופן אסינכרוני"""
+        if not self._available:
+            return {}
+            
+        import asyncio
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._fetch_table_profiling_sync, dataset_id, table_id)
+
+    def _fetch_table_profiling_sync(self, dataset_id: str, table_id: str) -> dict:
+        """השליפה הפיזית מ-Dataplex במבנה של CUSTOM"""
+        try:
+            from google.cloud import dataplex_v1
+            
+            entry_name = (
+                f"projects/{self.project_id}/locations/{self.location}/entryGroups/@bigquery/"
+                f"entries/bigquery.googleapis.com/projects/{self.project_id}/datasets/{dataset_id}/tables/{table_id}"
+            )
+            
+            schema_name = "projects/dataplex-types/locations/global/aspectTypes/data-profile"
+            
+            req = dataplex_v1.GetEntryRequest(
+                name=entry_name,
+                view=dataplex_v1.EntryView.CUSTOM,
+                aspect_types=[schema_name]
+            )
+            
+            entry = self._client.get_entry(request=req)
+            
+            # חיפוש דינאמי של מפתח הפרופיילינג
+            for key, aspect in entry.aspects.items():
+                if "data-profile" in key.lower():
+                    if aspect.data:
+                        # המרה של המילון הראשי למילון פייתון
+                        return dict(aspect.data)
+            return {}
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error("Profile fetch failed for %s.%s: %s", dataset_id, table_id, e)
+            return {}

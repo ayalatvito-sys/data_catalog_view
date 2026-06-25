@@ -400,7 +400,7 @@
 // }
 
 import { useState, useEffect, useRef } from 'react';
-import { useRoute, useLocation } from 'wouter';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box, Typography, Chip, IconButton, Tabs, Tab,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -687,9 +687,9 @@ function ForceGraph({ datasetId, tables, relationships }: GraphProps) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DatasetPage() {
-  const [, params] = useRoute('/dataset/:dataset_id');
-  const [, navigate] = useLocation();
-  const datasetId = params?.dataset_id ?? '';
+  const { dataset_id } = useParams();
+  const navigate = useNavigate();
+  const datasetId = dataset_id ?? '';
 
   const [tab, setTab] = useState(0);
   const [tables, setTables] = useState<TableDetail[]>([]);
@@ -946,8 +946,12 @@ export default function DatasetPage() {
                       {/* שימוש ב-finalDisplayedTables המסונן סופית */}
                       {finalDisplayedTables.map(t => (
                         <TableRow key={t.table_id} hover>
-                          <TableCell sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: 13, color: '#1a73e8' }}>
+                          <TableCell sx={{fontFamily: '"Roboto Mono", monospace', fontSize: 13}}>
+                          <Box component="span" onClick={() => navigate(`/datasets/${datasetId}/tables/${t.table_id}/profile`)}
+                            sx={{color: '#1a73e8', cursor: 'pointer', transition: 'color 0.2s ease', '&:hover': {color: '#1557b0'}}}
+                          >
                             {t.table_id}
+                          </Box>
                           </TableCell>
                           <TableCell><Chip label={t.table_type} size="small" variant="outlined" /></TableCell>
                           <TableCell align="right">{t.row_count?.toLocaleString('he-IL') ?? '—'}</TableCell>

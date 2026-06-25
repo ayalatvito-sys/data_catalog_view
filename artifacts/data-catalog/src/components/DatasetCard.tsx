@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import {
   Card, CardContent, Typography, Box, Chip,
   Tooltip, Dialog, DialogTitle, DialogContent, IconButton
@@ -13,7 +13,7 @@ interface DatasetCardProps {
 
 export default function DatasetCard({ dataset }: DatasetCardProps) {
   const [open, setOpen] = useState(false);
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const hasDesc = !!dataset.description_he;
 
   const displayDate = dataset.last_modified

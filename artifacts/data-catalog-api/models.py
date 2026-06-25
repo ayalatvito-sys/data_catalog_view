@@ -1,7 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
-
 class Dataset(BaseModel):
     dataset_id: str
     description: Optional[str] = None
@@ -73,3 +72,28 @@ class RelationshipList(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: str
+
+
+class TopNValue(BaseModel):
+    value: str
+    percentage: Optional[float] = None
+    count: Optional[int] = None
+
+class NumericStats(BaseModel):
+    min: Optional[float] = None
+    max: Optional[float] = None
+    avg: Optional[float] = None
+    stdDev: Optional[float] = None
+    median: Optional[float] = None
+
+class ColumnProfile(BaseModel):
+    column_name: str
+    nullness: Optional[float] = 0.0
+    uniqueness: Optional[float] = 0.0
+    top_n: List[TopNValue] = []
+    numeric_stats: Optional[NumericStats] = None
+
+class TableProfileResponse(BaseModel):
+    table_id: str
+    scanned_rows: Optional[int] = None
+    columns: List[ColumnProfile] = []

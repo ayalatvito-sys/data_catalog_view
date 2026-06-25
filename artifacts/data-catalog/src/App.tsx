@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import {BrowserRouter,Routes,Route} from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -8,6 +8,7 @@ import rtlPlugin from "stylis-plugin-rtl";
 import { theme } from "./theme";
 import CatalogPage from "./pages/CatalogPage";
 import DatasetPage from "./pages/DatasetPage";
+import TableProfilePage from './pages/TableProfilePage';
 
 const cacheRtl = createCache({
   key: "muirtl",
@@ -23,17 +24,20 @@ const queryClient = new QueryClient({
   },
 });
 
-function Router() {
+// בתוך בלוק ה-Routes שלך:
+function AppRoutes() {
   return (
-    <Switch>
-      <Route path="/" component={CatalogPage} />
-      <Route path="/dataset/:dataset_id" component={DatasetPage} />
-      <Route>
+    <Routes>
+      <Route path="/" element={<CatalogPage />} />
+      <Route path="/dataset/:dataset_id" element={<DatasetPage />} />
+      <Route path="*" element={
         <div style={{ padding: 20, textAlign: 'center' }}>
           <h2>404 - עמוד לא נמצא</h2>
         </div>
-      </Route>
-    </Switch>
+        }
+      />
+      <Route path="/datasets/:datasetId/tables/:tableId/profile" element={<TableProfilePage />}/>
+    </Routes>
   );
 }
 
@@ -43,9 +47,9 @@ function App() {
       <CacheProvider value={cacheRtl}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
         </ThemeProvider>
       </CacheProvider>
     </QueryClientProvider>
