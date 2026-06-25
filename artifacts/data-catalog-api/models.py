@@ -85,13 +85,27 @@ class NumericStats(BaseModel):
     avg: Optional[float] = None
     stdDev: Optional[float] = None
     median: Optional[float] = None
+    quartiles: List[float] = []
+
+class StringStats(BaseModel):
+    min_length: Optional[int] = None
+    max_length: Optional[int] = None
+    avg_length: Optional[float] = None
+
+class DatetimeStats(BaseModel):
+    min: Optional[str] = None
+    max: Optional[str] = None
+    format: Optional[str] = None
 
 class ColumnProfile(BaseModel):
     column_name: str
+    data_type: str = "UNKNOWN" # שדה הסוג (STRING/NUMERIC/DATETIME)
     nullness: Optional[float] = 0.0
     uniqueness: Optional[float] = 0.0
     top_n: List[TopNValue] = []
     numeric_stats: Optional[NumericStats] = None
+    string_stats: Optional[StringStats] = None
+    datetime_stats: Optional[DatetimeStats] = None
 
 class TableProfileResponse(BaseModel):
     table_id: str

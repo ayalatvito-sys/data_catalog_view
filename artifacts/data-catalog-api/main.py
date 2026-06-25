@@ -382,7 +382,7 @@ async def get_table_profile(dataset_id: str, table_id: str):
                             count=counts[i] if i < len(counts) else None
                         ))
                 
-                # נתונים נומריים (אם יש)
+                # --- נתונים נומריים ---
                 num_stats_obj = None
                 numeric_record = col_prof.get("numeric")
                 if numeric_record:
@@ -392,16 +392,56 @@ async def get_table_profile(dataset_id: str, table_id: str):
                         max=num_dict.get("max"),
                         avg=num_dict.get("avg"),
                         stdDev=num_dict.get("stdDev"),
-                        median=num_dict.get("median")
+                        median=num_dict.get("median"),
+                        quartiles=list(num_dict.get("quartiles", []))
                     )
-                    
+                
+                # --- נתוני טקסט/מחרוזות ---
+                str_stats_obj = None
+                string_record = col_prof.get("string")
+                if string_record:
+                    str_dict = dict(string_record)
+                    length_dict = dict(str_dict.get("length", {}))
+                    str_stats_obj = StringStats(
+                        min_length=length_dict.get("min"),
+                        max_length=length_dict.get("max"),
+                        avg_length=length_dict.get("avg")
+                    )
+
+                # --- נתוני תאריכים ---
+                dt_stats_obj = None
+                dt_record = col_prof.get("datetime")
+                if dt_record:
+                    dt_dict = dict(dt_record)
+                    dt_stats_obj = DatetimeStats(
+                        min=dt_dict.get("min"),
+                        max=dt_dict.get("max"),
+                        format=dt_dict.get("format")
+                    )
+
+                # --- הסקת סוג הנתונים (Type) ---
+                data_type = "UNKNOWN"
+                if numeric_record:
+                    data_type = "NUMERIC"
+                elif string_record:
+                    data_type = "STRING"
+                elif dt_record:
+                    data_type = "DATETIME"
+                elif col_prof.get("array"):
+                    data_type = "ARRAY"
+                elif col_prof.get("boolean"):
+                    data_type = "BOOLEAN"
+
                 # צירוף העמודה לרשימה הסופית
                 columns_data.append(ColumnProfile(
                     column_name=col_name,
+                    data_type=data_type,
                     nullness=nullness,
                     uniqueness=uniqueness,
                     top_n=top_n_list,
-                    numeric_stats=num_stats_obj
+                    numeric_stats=num_stats_obj,
+                    string_stats=str_stats_obj,
+                    datetime_stats=dt_stats_obj
                 ))
         
         return TableProfileResponse(

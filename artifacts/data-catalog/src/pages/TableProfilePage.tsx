@@ -8,16 +8,13 @@ import {
   CardContent,
   Grid,
   LinearProgress,
-  Chip,
   IconButton,
   Divider,
   CircularProgress,
-  Tooltip,
   Paper
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-// --- הגדרות הטיפוסים (תואם בדיוק ל-Backend שלנו) ---
 interface TopNValue {
   value: string;
   percentage?: number;
@@ -30,14 +27,30 @@ interface NumericStats {
   avg?: number;
   stdDev?: number;
   median?: number;
+  quartiles?: number[];
+}
+
+interface StringStats {
+  min_length?: number;
+  max_length?: number;
+  avg_length?: number;
+}
+
+interface DatetimeStats {
+  min?: string;
+  max?: string;
+  format?: string;
 }
 
 interface ColumnProfile {
   column_name: string;
+  data_type: string;
   nullness: number;
   uniqueness: number;
   top_n: TopNValue[];
   numeric_stats?: NumericStats;
+  string_stats?: StringStats;
+  datetime_stats?: DatetimeStats;
 }
 
 interface ProfileResponse {
@@ -57,7 +70,6 @@ const TableProfilePage: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // שימי לב לעדכן את נתיב ה-API לכתובת האמיתית של השרת שלך
         const response = await fetch(`/api/datasets/${datasetId}/tables/${tableId}/profile`);
         if (!response.ok) throw new Error('שגיאה בשליפת פרופיל הנתונים');
         const data = await response.json();
@@ -72,10 +84,9 @@ const TableProfilePage: React.FC = () => {
     fetchProfile();
   }, [datasetId, tableId]);
 
-  // פונקציית עזר לבחירת צבע לבר ה-Nulls (הרבה ריקים = אדום/אזהרה)
   const getNullnessColor = (percent: number) => {
     if (percent > 50) return 'error';
-    if (percent > 20) return 'warning';
+    if (percent > 10) return 'warning';
     return 'success';
   };
 
@@ -89,25 +100,24 @@ const TableProfilePage: React.FC = () => {
 
   if (error || !profile) {
     return (
-      <Container>
-        <Typography color="error" variant="h6">
-          {error || 'לא נמצאו נתונים'}
+      <Container dir="rtl">
+        <Typography color="error" variant="h6" mt={4}>
+          {error || 'לא נמצאו נתונים. ודא שפרופיל הנתונים הסתיים בהצלחה ב-GCP.'}
         </Typography>
-        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>חזור</Button>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }} dir="rtl">
-      {/* כותרת העמוד וניווט חזרה */}
+      {/* כותרת עליונה */}
       <Box display="flex" alignItems="center" mb={4}>
-        <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
+        <IconButton onClick={() => navigate(-1)} sx={{ mr: 2, bgcolor: 'background.paper', boxShadow: 1 }}>
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="h4" fontWeight="bold">
-            פרופיל נתונים: {profile.table_id}
+          <Typography variant="h4" fontWeight="bold" color="primary.main">
+            {profile.table_id}
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             Dataset: {datasetId} | נסרקו {profile.scanned_rows?.toLocaleString() || 'N/A'} שורות
@@ -115,102 +125,201 @@ const TableProfilePage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* גריד הכרטיסיות של העמודות */}
-      <Grid container spacing={3}>
+      {/* רשימת העמודות - כל עמודה מקבלת שורה רחבה משלה */}
+      <Box display="flex" flexDirection="column" gap={3}>
         {profile.columns.map((col) => (
-          <Grid item xs={12} md={6} lg={4} key={col.column_name}>
-            <Card elevation={3} sx={{ height: '100%', borderRadius: 3 }}>
-              <CardContent>
-                {/* שם העמודה */}
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  {col.column_name}
-                </Typography>
-
-                <Divider sx={{ my: 1.5 }} />
-
-                {/* מדדי אחוזים (Progress Bars) */}
-                <Box mb={2}>
-                  <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" color="text.secondary">ערכים חסרים (Nulls)</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {(col.nullness * 100).toFixed(1)}%
+          <Card key={col.column_name} elevation={2} sx={{ borderRadius: 2, overflow: 'visible' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Grid container spacing={4}>
+                
+                {/* בלוק 1: שם העמודה, סוג נתונים ומדדי אחוזים */}
+                <Grid item xs={12} md={3}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <Typography variant="h6" fontWeight="bold">
+                      {col.column_name}
                     </Typography>
+                    {col.data_type !== 'UNKNOWN' && (
+                      <Chip label={col.data_type} size="small" color="default" sx={{ fontWeight: 'medium' }} />
+                    )}
                   </Box>
-                  <Tooltip title="אחוז השורות שבהן אין מידע בעמודה זו">
+                  <Divider sx={{ mb: 2, width: '70%' }} />
+                  
+                  <Box mb={3}>
+                    <Box display="flex" justifyContent="space-between" mb={0.5}>
+                      <Typography variant="body2" color="text.secondary">ערכים חסרים (Nulls)</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {col.nullness.toFixed(1)}%
+                      </Typography>
+                    </Box>
                     <LinearProgress 
                       variant="determinate" 
-                      value={col.nullness * 100} 
-                      color={getNullnessColor(col.nullness * 100)}
+                      value={col.nullness} 
+                      color={getNullnessColor(col.nullness)}
                       sx={{ height: 8, borderRadius: 4 }}
                     />
-                  </Tooltip>
-                </Box>
-
-                <Box mb={2}>
-                  <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" color="text.secondary">ייחודיות (Uniqueness)</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {(col.uniqueness * 100).toFixed(1)}%
-                    </Typography>
                   </Box>
-                  <Tooltip title="אחוז הערכים השונים מתוך כלל הערכים">
+
+                  <Box>
+                    <Box display="flex" justifyContent="space-between" mb={0.5}>
+                      <Typography variant="body2" color="text.secondary">ייחודיות (Uniqueness)</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {col.uniqueness.toFixed(1)}%
+                      </Typography>
+                    </Box>
                     <LinearProgress 
                       variant="determinate" 
-                      value={col.uniqueness * 100} 
+                      value={col.uniqueness} 
                       color="primary"
                       sx={{ height: 8, borderRadius: 4 }}
                     />
-                  </Tooltip>
-                </Box>
+                  </Box>
+                </Grid>
 
-                {/* נתונים סטטיסטיים לנומרי (יוצג רק אם קיים) */}
-                {col.numeric_stats && (
-                  <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: 'background.default', borderRadius: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>סטטיסטיקות מספרים:</Typography>
-                    <Grid container spacing={1}>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">מינימום</Typography>
-                        <Typography variant="body2">{col.numeric_stats.min?.toFixed(2) || '-'}</Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">מקסימום</Typography>
-                        <Typography variant="body2">{col.numeric_stats.max?.toFixed(2) || '-'}</Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">ממוצע</Typography>
-                        <Typography variant="body2">{col.numeric_stats.avg?.toFixed(2) || '-'}</Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">חציון</Typography>
-                        <Typography variant="body2">{col.numeric_stats.median?.toFixed(2) || '-'}</Typography>
-                      </Grid>
-                    </Grid>
+                {/* בלוק 2: סטטיסטיקות דינאמיות לפי סוג הנתונים */}
+                <Grid item xs={12} md={4}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    סטטיסטיקות
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: 'grey.50', minHeight: '140px' }}>
+                    <Box display="flex" flexDirection="column" gap={1}>
+                      
+                      {/* תצוגה למספרים */}
+                      {col.numeric_stats && (
+                        <>
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">ממוצע</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.numeric_stats.avg?.toFixed(2) || '-'}</Typography>
+                          </Box>
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">סטיית תקן</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.numeric_stats.stdDev?.toFixed(2) || '-'}</Typography>
+                          </Box>
+                          <Divider sx={{ my: 0.5 }} />
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">מינימום</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.numeric_stats.min?.toFixed(2) || '-'}</Typography>
+                          </Box>
+                          {col.numeric_stats.quartiles && col.numeric_stats.quartiles.length === 3 && (
+                            <>
+                              <Box display="flex" justifyContent="space-between">
+                                <Typography variant="body2" color="text.secondary">רבעון תחתון</Typography>
+                                <Typography variant="body2" fontWeight="medium">{col.numeric_stats.quartiles[0]?.toFixed(2) || '-'}</Typography>
+                              </Box>
+                              <Box display="flex" justifyContent="space-between">
+                                <Typography variant="body2" color="text.secondary">חציון</Typography>
+                                <Typography variant="body2" fontWeight="medium">{col.numeric_stats.quartiles[1]?.toFixed(2) || '-'}</Typography>
+                              </Box>
+                              <Box display="flex" justifyContent="space-between">
+                                <Typography variant="body2" color="text.secondary">רבעון עליון</Typography>
+                                <Typography variant="body2" fontWeight="medium">{col.numeric_stats.quartiles[2]?.toFixed(2) || '-'}</Typography>
+                              </Box>
+                            </>
+                          )}
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">מקסימום</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.numeric_stats.max?.toFixed(2) || '-'}</Typography>
+                          </Box>
+                        </>
+                      )}
+
+                      {/* תצוגה למחרוזות (טקסט) */}
+                      {col.string_stats && (
+                        <>
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">אורך ממוצע</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.string_stats.avg_length?.toFixed(2) || '-'}</Typography>
+                          </Box>
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">אורך מינימלי</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.string_stats.min_length || '-'}</Typography>
+                          </Box>
+                          <Box display="flex" justifyContent="space-between">
+                            <Typography variant="body2" color="text.secondary">אורך מקסימלי</Typography>
+                            <Typography variant="body2" fontWeight="medium">{col.string_stats.max_length || '-'}</Typography>
+                          </Box>
+                        </>
+                      )}
+
+                      {/* תצוגה לתאריכים */}
+                      {col.datetime_stats && (
+                        <>
+                          <Box display="flex" justifyContent="space-between" mb={1}>
+                            <Typography variant="body2" color="text.secondary">תאריך מוקדם ביותר</Typography>
+                            <Typography variant="body2" fontWeight="medium" sx={{ direction: 'ltr' }}>
+                              {col.datetime_stats.min ? new Date(col.datetime_stats.min).toLocaleString('he-IL') : '-'}
+                            </Typography>
+                          </Box>
+                          <Box display="flex" justifyContent="space-between" mb={1}>
+                            <Typography variant="body2" color="text.secondary">תאריך מאוחר ביותר</Typography>
+                            <Typography variant="body2" fontWeight="medium" sx={{ direction: 'ltr' }}>
+                              {col.datetime_stats.max ? new Date(col.datetime_stats.max).toLocaleString('he-IL') : '-'}
+                            </Typography>
+                          </Box>
+                          {col.datetime_stats.format && (
+                            <Box display="flex" justifyContent="space-between">
+                              <Typography variant="body2" color="text.secondary">פורמט מזוהה</Typography>
+                              <Typography variant="body2" fontWeight="medium" sx={{ direction: 'ltr' }}>{col.datetime_stats.format}</Typography>
+                            </Box>
+                          )}
+                        </>
+                      )}
+
+                      {/* אם אין סטטיסטיקות בכלל */}
+                      {!col.numeric_stats && !col.string_stats && !col.datetime_stats && (
+                        <Typography variant="body2" color="text.disabled" sx={{ mt: 1, textAlign: 'center' }}>
+                          לא קיימות סטטיסטיקות נוספות לסוג נתונים זה.
+                        </Typography>
+                      )}
+                    </Box>
                   </Paper>
-                )}
+                </Grid>
 
-                {/* ערכים נפוצים (Top N) */}
-                {col.top_n && col.top_n.length > 0 && (
-                  <Box mt={2}>
-                    <Typography variant="subtitle2" gutterBottom>ערכים נפוצים ביותר:</Typography>
-                    <Box display="flex" flexWrap="wrap" gap={1}>
-                      {col.top_n.slice(0, 5).map((item, idx) => (
-                        <Chip 
-                          key={idx}
-                          label={`${item.value || 'ריק'} (${(item.percentage! * 100).toFixed(1)}%)`}
-                          size="small"
-                          variant="outlined"
-                          sx={{ bgcolor: 'action.hover' }}
-                        />
+                {/* בלוק 3: גרף ברים אופקי לערכים נפוצים */}
+                <Grid item xs={12} md={5}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    ערכים נפוצים ביותר (Top Values)
+                  </Typography>
+                  {col.top_n && col.top_n.length > 0 ? (
+                    <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
+                      {col.top_n.slice(0, 8).map((item, idx) => (
+                        <Box key={idx} display="flex" alignItems="center">
+                          {/* שם הערך */}
+                          <Typography 
+                            variant="body2" 
+                            sx={{ width: 100, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                            title={item.value || 'ריק'}
+                          >
+                            {item.value || '(ריק)'}
+                          </Typography>
+                          
+                          {/* הבר עצמו */}
+                          <Box sx={{ flexGrow: 1, mx: 2 }}>
+                            <LinearProgress 
+                              variant="determinate" 
+                              value={item.percentage || 0} 
+                              sx={{ height: 12, borderRadius: 1, bgcolor: 'grey.200' }}
+                            />
+                          </Box>
+                          
+                          {/* תווית האחוזים */}
+                          <Typography variant="body2" sx={{ width: 45, textAlign: 'left', fontWeight: 'bold' }}>
+                            {item.percentage?.toFixed(1)}%
+                          </Typography>
+                        </Box>
                       ))}
                     </Box>
-                  </Box>
-                )}
+                  ) : (
+                    <Typography variant="body2" color="text.disabled" sx={{ mt: 2 }}>
+                      לא נמצאו נתונים קטגוריאליים.
+                    </Typography>
+                  )}
+                </Grid>
 
-              </CardContent>
-            </Card>
-          </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
     </Container>
   );
 };
