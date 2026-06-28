@@ -1,0 +1,320 @@
+
+    [{
+      "table1": "common_involved",
+      "table2": "assistance_requests",
+      "relationship": "common_involved.cminv_requestor = assistance_requests.asreq_common_folder",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "common_involved_contacts",
+      "table2": "common_involved",
+      "relationship": "common_involved_contacts.cicnt_involved = common_involved.cminv_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "transfer_interface_ack_data",
+      "table2": "transfer_interface_ack_additional_values",
+      "relationship": "transfer_interface_ack_data.triad_id = transfer_interface_ack_additional_values.traav_ack_data_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "assistance_employees_on_duty",
+      "table2": "v_mss_prod_employees_partial",
+      "relationship": "assistance_employees_on_duty.asemd_employee = v_mss_prod_employees_partial.emp_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "document_interpreter_types",
+      "table2": "v_mss_prod_documents_partial",
+      "relationship": "document_interpreter_types.dcit_id = v_mss_prod_documents_partial.doc_interpreter_type",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "v_mss_prod_documents_partial",
+      "table2": "v_mss_prod_document_requestors_partial",
+      "relationship": "v_mss_prod_documents_partial.doc_id = v_mss_prod_document_requestors_partial.docrq_document",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "assistance_assigners",
+      "table2": "assistance_programs",
+      "relationship": "assistance_assigners.asasg_program = assistance_programs.asprg_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "towns",
+      "table2": "common_involved_addresses",
+      "relationship": "towns.twn_id = common_involved_addresses.ciadr_town",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "assistance_royalities_actions_history",
+      "table2": "assistance_request_royalties",
+      "relationship": "assistance_royalities_actions_history.asrah_royalty = assistance_request_royalties.asrqr_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "common_involved_addresses",
+      "table2": "common_involved",
+      "relationship": "common_involved_addresses.ciadr_involved = common_involved.cminv_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "assistance_assigners",
+      "table2": "assistance_requests",
+      "relationship": "assistance_assigners.asasg_id = assistance_requests.asreq_assigner",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "standardization_enforcement_implementation_charges",
+      "table2": "enterprise_debts",
+      "relationship": "standardization_enforcement_implementation_charges.seich_voucher_number = enterprise_debts.enpdb_original_case_number",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "assistance_request_royalties",
+      "table2": "assistance_requests",
+      "relationship": "assistance_request_royalties.asrqr_request = assistance_requests.asreq_id",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "streets",
+      "table2": "common_involved_addresses",
+      "relationship": "streets.strt_street_code = common_involved_addresses.ciadr_street AND streets.strt_town_code = common_involved_addresses.ciadr_town",
+      "source": "Usage-based"
+    },
+    {
+      "table1": "standardization_enforcement_folder_participants",
+      "table2": "standardization_enforcement_folders",
+      "relationship": "standardization_enforcement_folder_participants.sefpt_std_enforcement_folder = standardization_enforcement_folders.sefol_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_approval_request_manufacturers",
+      "table2": "import_approval_requests",
+      "relationship": "import_approval_request_manufacturers.impam_approval_request = import_approval_requests.impar_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_request_wares",
+      "table2": "import_export_request_wares_entities",
+      "relationship": "import_export_request_wares.ierwr_id = import_export_request_wares_entities.ierwe_request_ware",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_conditions",
+      "table2": "import_confirm_bodies",
+      "relationship": "import_conditions.icon_confirm_body = import_confirm_bodies.icbd_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "assistance_requests",
+      "table2": "assistance_programs",
+      "relationship": "assistance_requests.asreq_assistance_program = assistance_programs.asprg_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_completion_requirement_fields",
+      "table2": "import_export_request_wares",
+      "relationship": "import_export_completion_requirement_fields.iecrf_request_ware = import_export_request_wares.ierwr_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_request_wares",
+      "table2": "import_export_requests",
+      "relationship": "import_export_request_wares.ierwr_request = import_export_requests.iereq_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_conditions",
+      "table2": "import_condition_types",
+      "relationship": "import_conditions.icon_type = import_condition_types.icdt_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "assistance_program_royalty_type_SKU",
+      "table2": "assistance_programs",
+      "relationship": "assistance_program_royalty_type_SKU.asprs_program = assistance_programs.asprg_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_requests",
+      "table2": "import_export_external_factor_decisions",
+      "relationship": "import_export_requests.iereq_id = import_export_external_factor_decisions.ieefd_request",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_committee_request_participants",
+      "table2": "import_export_committees",
+      "relationship": "import_export_committee_request_participants.iecrp_committee = import_export_committees.iecmt_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_levies",
+      "table2": "import_levy_types",
+      "relationship": "import_levies.imly_type = import_levy_types.iltp_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_requests",
+      "table2": "import_export_wassenaar",
+      "relationship": "import_export_requests.iereq_id = import_export_wassenaar.iewss_request",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "metrology_fee_calculations",
+      "table2": "metrology_inventory_checks",
+      "relationship": "metrology_fee_calculations.mfclc_id = metrology_inventory_checks.minvc_calculation",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "metrology_enterprise_visits",
+      "table2": "metrology_inventory_checks",
+      "relationship": "metrology_enterprise_visits.menpv_id = metrology_inventory_checks.minvc_visit",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "assistance_requests",
+      "table2": "assistance_request_activities",
+      "relationship": "assistance_requests.asreq_id = assistance_request_activities.asrac_request",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "standardization_enforcement_folder_violations",
+      "table2": "standardization_enforcement_folders",
+      "relationship": "standardization_enforcement_folder_violations.sevio_std_enforcement_folder = standardization_enforcement_folders.sefol_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "legal_claim_folder_participant_ransoms",
+      "table2": "legal_claim_folder_participant_ransom_vouchers",
+      "relationship": "legal_claim_folder_participant_ransoms.lcprn_id = legal_claim_folder_participant_ransom_vouchers.lfprv_ransom",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "legal_claim_folder_participant_ransoms",
+      "table2": "legal_claim_folder_participants",
+      "relationship": "legal_claim_folder_participant_ransoms.lcprn_participant = legal_claim_folder_participants.lcfpr_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_requests",
+      "table2": "importers",
+      "relationship": "import_export_requests.iereq_enterprise = importers.imptr_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_requests",
+      "table2": "ministry_enp_data_sources",
+      "relationship": "import_export_requests.iereq_data_source = ministry_enp_data_sources.mends_data_source",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "metrology_enterprise_visits",
+      "table2": "ministry_enp_data_sources",
+      "relationship": "metrology_enterprise_visits.menpv_enterprise = ministry_enp_data_sources.mends_enterprise",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_approval_requests",
+      "table2": "import_approval_required_documents",
+      "relationship": "import_approval_requests.impar_certificate_type = import_approval_required_documents.imprd_certificate_type",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "metrology_fee_calculations",
+      "table2": "ministry_enp_data_sources",
+      "relationship": "metrology_fee_calculations.mfclc_enterprise = ministry_enp_data_sources.mends_enterprise",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_approval_requests",
+      "table2": "import_export_certificate_authorities",
+      "relationship": "import_approval_requests.impar_authority = import_export_certificate_authorities.iecau_authority AND import_approval_requests.impar_certificate_type = import_export_certificate_authorities.iecau_certificate_type",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "metrology_enterprise_visits",
+      "table2": "metrology_fee_calculations",
+      "relationship": "metrology_enterprise_visits.menpv_enterprise = metrology_fee_calculations.mfclc_enterprise",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "common_involved",
+      "table2": "ministry_enp_data_sources",
+      "relationship": "common_involved.cminv_data_source = ministry_enp_data_sources.mends_data_source",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_requests",
+      "table2": "import_export_status_changings",
+      "relationship": "import_export_requests.iereq_status = import_export_status_changings.iestc_status",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "enforcement_law_chapters",
+      "table2": "standardization_enforcement_folder_violations",
+      "relationship": "enforcement_law_chapters.enlac_id = standardization_enforcement_folder_violations.sevio_law_chapter",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "assistance_requests",
+      "table2": "common_involved",
+      "relationship": "assistance_requests.asreq_common_involved = common_involved.cminv_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "assistance_assigners",
+      "table2": "assistance_requests",
+      "relationship": "assistance_assigners.asasg_assigner_number = assistance_requests.asreq_assigner",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_approval_requests",
+      "table2": "importers",
+      "relationship": "import_approval_requests.impar_importer_enterprise = importers.imptr_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "document_common_types",
+      "table2": "document_interpreter_types",
+      "relationship": "document_common_types.dccmt_file_extension = document_interpreter_types.dcit_extension",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_quotas",
+      "table2": "export_wares",
+      "relationship": "import_quotas.impqt_import_ware = export_wares.ewar_code",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "common_involved",
+      "table2": "importers",
+      "relationship": "common_involved.cminv_id = importers.imptr_requestor_id",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_cond_exclusives",
+      "table2": "export_wares",
+      "relationship": "import_cond_exclusives.icex_ware_code = export_wares.ewar_code",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_approval_requests",
+      "table2": "import_export_requests",
+      "relationship": "import_approval_requests.impar_importer_enterprise = import_export_requests.iereq_enterprise",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "metrology_inventory_checks",
+      "table2": "export_wares",
+      "relationship": "metrology_inventory_checks.minvc_measurement_item = export_wares.ewar_measurement_item",
+      "source": "LLM-inferred"
+    },
+    {
+      "table1": "import_export_request_wares",
+      "table2": "export_wares",
+      "relationship": "import_export_request_wares.ierwr_ware_code = export_wares.ewar_code",
+      "source": "LLM-inferred"
+    }
+  ]
