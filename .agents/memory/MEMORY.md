@@ -1,1 +1,2 @@
 - [MUI v7 Box/Typography TS pattern](mui-box-sx.md) — all system shorthand props (display, mb, fontWeight…) must go inside sx={} not as direct JSX attrs.
+- [Full-stack caching architecture](fullstack-caching.md) — backend TTL cache via decorator + React Query staleTime + RefreshContext pattern for global hard-refresh button.

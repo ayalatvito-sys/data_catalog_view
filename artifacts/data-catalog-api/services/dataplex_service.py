@@ -2,6 +2,8 @@ import asyncio
 import logging
 from typing import Optional
 
+from cache_utils import cached
+
 logger = logging.getLogger(__name__)
 
 class DataplexService:
@@ -31,7 +33,8 @@ class DataplexService:
     def is_available(self) -> bool:
         return self._available
 
-    async def get_table_aspects(self, dataset_id: str, table_id: str) -> dict:
+    @cached(ttl=300)
+    async def get_table_aspects(self, dataset_id: str, table_id: str, *, refresh: bool = False) -> dict:
         defaults = {"is_financial": False, "is_geographical": False, "is_sensitive": False}
         if not self._available:
             return defaults
@@ -59,28 +62,23 @@ class DataplexService:
             request = dataplex_v1.GetEntryRequest(
                 name=entry_name,
                 view=dataplex_v1.EntryView.CUSTOM,
-                aspect_types=[aspect_type_path, tasks_aspect_path] # הוספנו את התבנית החדשה לבקשה
+                aspect_types=[aspect_type_path, tasks_aspect_path]
             )
             
             entry = self._client.get_entry(request=request)
             aspects = entry.aspects or {}
 
-            # --- הדפסת הדיבוג (נראה מה באמת חוזר מגוגל) ---
+            # --- דיבוג (נשאיר רק עבור טבלת ה-diamond_dealers) ---
             if table_id == "diamond_dealers":
                 logger.info(f"DEBUG ASPECT KEYS for {table_id}: {list(aspects.keys())}")
                 for k, v in aspects.items():
                     if 'tasks' in k:
                          logger.info(f"DEBUG ASPECT DATA for {k}: {v.data}")
-            # ---------------------------------------------
+            # -------------------------------------------------------
             
             # שליפת הנתונים מה-UI Metadata
             matched_ui_key = next((k for k in aspects.keys() if k.endswith(".ui-metadata")), None)
-            # if not matched_key:
-            #     return defaults
 
-            # raw_aspect = aspects[matched_key]
-            # if not raw_aspect.data:
-            #     return defaults
             if matched_ui_key and aspects[matched_ui_key].data:
                 ui_data = aspects[matched_ui_key].data
                 fin_val = ui_data.get("is-financial") or ui_data.get("is_financial") or False
@@ -120,11 +118,11 @@ class DataplexService:
             }
             
         except Exception as e:
-            # logger.debug("Aspects fetch failed for %s.%s: %s", dataset_id, table_id, e)
             logger.error("Aspects fetch failed for %s.%s: %s", dataset_id, table_id, e)
             return defaults
 
-    async def get_dataset_aspects(self, dataset_id: str) -> dict:
+    @cached(ttl=300)
+    async def get_dataset_aspects(self, dataset_id: str, *, refresh: bool = False) -> dict:
         defaults = {"is_financial": False, "is_geographical": False, "is_sensitive": False}
         if not self._available:
             return defaults
@@ -134,7 +132,6 @@ class DataplexService:
         )
 
     def _fetch_dataset_aspects(self, dataset_id: str) -> dict:
-            # הוספנו את has_custom_aspects לערכי ברירת המחדל
             defaults = {"is_financial": False, "is_geographical": False, "is_sensitive": False, "has_custom_aspects": False, "description_en": None, "description_he": None}
             if not self._available:
                 return defaults
@@ -164,7 +161,6 @@ class DataplexService:
                 aspect_type_path = f"projects/{proj}/locations/{self.location}/aspectTypes/ui-metadata"
                 tasks_aspect_path = f"projects/{proj}/locations/{self.location}/aspectTypes/db-tasks-information"
                 overview_full_path = "projects/dataplex-types/locations/global/aspectTypes/overview"
-                overview_map_key = "dataplex-types.global.overview"
 
                 request = dataplex_v1.GetEntryRequest(
                     name=entry_name,
@@ -183,7 +179,6 @@ class DataplexService:
                 # חילוץ עברית מתוך ה-Overview
                 description_he = None
                 if matched_overview_key and aspects[matched_overview_key].data:
-                    # המרה למילון כדי למנוע את שגיאת ה-NoneType
                     overview_dict = dict(aspects[matched_overview_key].data)
                     overview_content = overview_dict.get("content", "")
                     
@@ -192,7 +187,6 @@ class DataplexService:
                         description_he = overview_content.split(header)[1].strip()
 
                 # --- הוספת דגל חכם ---
-                # אם מצאנו לפחות אחד מהמפתחות שלנו, זה אומר שיש הגדרות ברמת ה-DS
                 has_custom_aspects = bool(matched_ui_key or matched_tasks_key)
 
                 # שליפת הנתונים מה-UI Metadata
@@ -231,7 +225,7 @@ class DataplexService:
                     "system_name": system_name,
                     "project_manager": project_manager,
                     "characterization_link": characterization_link,
-                    "has_custom_aspects": has_custom_aspects, # מחזירים את התשובה לראוטר
+                    "has_custom_aspects": has_custom_aspects,
                     "description_en": description_en,
                     "description_he": description_he,
                 }
@@ -240,7 +234,8 @@ class DataplexService:
                 logger.error("Aspects fetch failed for dataset %s: %s", dataset_id, e)
                 return defaults
 
-    async def get_table_profiling(self, dataset_id: str, table_id: str) -> dict:
+    @cached(ttl=300)
+    async def get_table_profiling(self, dataset_id: str, table_id: str, *, refresh: bool = False) -> dict:
         """שולף את הנתונים באופן אסינכרוני"""
         if not self._available:
             return {}
@@ -273,7 +268,6 @@ class DataplexService:
             for key, aspect in entry.aspects.items():
                 if "data-profile" in key.lower():
                     if aspect.data:
-                        # המרה של המילון הראשי למילון פייתון
                         return dict(aspect.data)
             return {}
         except Exception as e:

@@ -122,7 +122,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography fontFamily='"Roboto Mono", monospace' color="primary">
+          <Typography sx={{ fontFamily: '"Roboto Mono", monospace', color: 'primary.main' }}>
             {dataset.dataset_id}
           </Typography>
           <IconButton onClick={() => setOpen(false)} size="small">

@@ -3,6 +3,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, List
 
+from cache_utils import cached
+
 logger = logging.getLogger(__name__)
 
 EXCLUDED_DATASETS = {
@@ -20,9 +22,6 @@ class BigQueryService:
         self.location = location
         self._client = None
         self._available = False
-        self._datasets_cache: Optional[List] = None
-        self._cache_ts: float = 0
-        self._cache_ttl: float = 300
         self._init_client()
 
     def _init_client(self):
@@ -41,18 +40,14 @@ class BigQueryService:
 
     # ─── Datasets ─────────────────────────────────────────────────────────────
 
-    async def list_datasets(self):
+    @cached(ttl=300)
+    async def list_datasets(self, *, refresh: bool = False):
+        """Returns all non-excluded datasets.  Cached 5 min; bypass with refresh=True."""
         if not self._available:
             raise RuntimeError("BigQuery credentials not configured.")
-        import time
-        now = time.time()
-        if self._datasets_cache is not None and (now - self._cache_ts) < self._cache_ttl:
-            return list(self._datasets_cache)
         loop = asyncio.get_event_loop()
         datasets = await loop.run_in_executor(None, self._fetch_datasets)
-        self._datasets_cache = datasets
-        self._cache_ts = now
-        return list(datasets)
+        return datasets
 
     def _fetch_datasets(self):
         from models import Dataset
@@ -77,8 +72,8 @@ class BigQueryService:
             ))
         return result
 
-    async def get_dataset(self, dataset_id: str):
-        datasets = await self.list_datasets()
+    async def get_dataset(self, dataset_id: str, *, refresh: bool = False):
+        datasets = await self.list_datasets(refresh=refresh)
         for ds in datasets:
             if ds.dataset_id == dataset_id:
                 return ds
@@ -86,7 +81,9 @@ class BigQueryService:
 
     # ─── Tables ───────────────────────────────────────────────────────────────
 
-    async def list_tables(self, dataset_id: str) -> list:
+    @cached(ttl=300)
+    async def list_tables(self, dataset_id: str, *, refresh: bool = False) -> list:
+        """Returns all tables for a dataset.  Cached 5 min; bypass with refresh=True."""
         if not self._available:
             raise RuntimeError("BigQuery credentials not configured.")
         loop = asyncio.get_event_loop()
@@ -94,7 +91,6 @@ class BigQueryService:
 
     def _fetch_tables(self, dataset_id: str):
         from models import TableDetail
-        from google.cloud import bigquery
         result = []
         dataset_ref = self._client.dataset(dataset_id, project=self.project_id)
         for t in self._client.list_tables(dataset_ref):
@@ -112,7 +108,9 @@ class BigQueryService:
 
     # ─── Relationships (from Dataplex BQ table) ───────────────────────────────
 
-    async def list_relationships(self, dataset_id: str, min_confidence: float = 0.5) -> list:
+    @cached(ttl=300)
+    async def list_relationships(self, dataset_id: str, min_confidence: float = 0.5, *, refresh: bool = False) -> list:
+        """Returns relationship edges for a dataset.  Cached 5 min."""
         if not self._available:
             raise RuntimeError("BigQuery credentials not configured.")
         loop = asyncio.get_event_loop()

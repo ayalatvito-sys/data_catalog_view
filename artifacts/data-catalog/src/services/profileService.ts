@@ -6,10 +6,10 @@ import { ProfileResponse } from '../types/profile';
 export async function fetchTableProfile(
   datasetId: string,
   tableId: string,
+  refresh = false,
 ): Promise<ProfileResponse> {
-  const response = await fetch(
-    `/api/datasets/${datasetId}/tables/${tableId}/profile`,
-  );
+  const url = `/api/datasets/${datasetId}/tables/${tableId}/profile${refresh ? '?refresh=true' : ''}`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('שגיאה בשליפת פרופיל הנתונים');
   }

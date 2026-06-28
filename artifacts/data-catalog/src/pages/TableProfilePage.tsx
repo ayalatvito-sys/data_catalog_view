@@ -1,38 +1,52 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, CircularProgress, Button } from '@mui/material';
+import {
+  Box, Container, Typography, CircularProgress, Button,
+  AppBar, Toolbar, IconButton, Tooltip
+} from '@mui/material';
+import { ArrowBack, Refresh } from '@mui/icons-material';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ProfileResponse } from '../types/profile';
 import { fetchTableProfile } from '../services/profileService';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import ColumnCard from '../components/profile/ColumnCard';
+import { useRefresh } from '../contexts/RefreshContext';
 
 const TableProfilePage: React.FC = () => {
   const { datasetId, tableId } = useParams<{ datasetId: string; tableId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { registerHardRefresh, triggerHardRefresh, isRefreshing } = useRefresh();
 
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryKey = ['tableProfile', datasetId, tableId];
 
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<ProfileResponse, Error>({
+    queryKey,
+    queryFn: () => fetchTableProfile(datasetId!, tableId!),
+    enabled: Boolean(datasetId && tableId),
+  });
+
+  // Register the hard-refresh handler for this page
   useEffect(() => {
-    // Guard: params are guaranteed by the router pattern, but handle defensively
-    if (!datasetId || !tableId) {
-      setError('פרמטרים חסרים בכתובת ה-URL');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    fetchTableProfile(datasetId, tableId)
-      .then((data) => setProfile(data))
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [datasetId, tableId]);
+    registerHardRefresh(async () => {
+      // 1. Remove React Query cache entry for this profile
+      queryClient.removeQueries({ queryKey });
+      // 2. Refetch with ?refresh=true to bypass backend cache
+      await queryClient.fetchQuery({
+        queryKey,
+        queryFn: () => fetchTableProfile(datasetId!, tableId!, true),
+      });
+    });
+  }, [registerHardRefresh, queryClient, datasetId, tableId]);
 
   // ── Loading ────────────────────────────────────────────────────────────────
-  if (loading) {
+  if (isLoading) {
     return (
       <Box
         sx={{
@@ -54,14 +68,14 @@ const TableProfilePage: React.FC = () => {
   }
 
   // ── Error / empty ──────────────────────────────────────────────────────────
-  if (error || !profile) {
+  if (isError || !profile) {
     return (
       <Container maxWidth="sm" dir="rtl" sx={{ py: 10, textAlign: 'center' }}>
         <Typography variant="h6" color="text.primary" sx={{ fontWeight: 600, mb: 1 }}>
           לא ניתן להציג את פרופיל הנתונים
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          {error || 'ודא שתהליך פרופיל הנתונים הסתיים בהצלחה ב-GCP.'}
+          {error?.message || 'ודא שתהליך פרופיל הנתונים הסתיים בהצלחה ב-GCP.'}
         </Typography>
         <Button
           variant="outlined"
@@ -71,10 +85,7 @@ const TableProfilePage: React.FC = () => {
             color: 'text.primary',
             textTransform: 'none',
             borderRadius: 2,
-            '&:hover': {
-              borderColor: 'primary.main',
-              bgcolor: '#e8f0fe',
-            },
+            '&:hover': { borderColor: 'primary.main', bgcolor: '#e8f0fe' },
           }}
         >
           חזרה
@@ -86,6 +97,29 @@ const TableProfilePage: React.FC = () => {
   // ── Main view ─────────────────────────────────────────────────────────────
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      {/* Toolbar with back + refresh */}
+      <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: '1px solid #dadce0', bgcolor: '#fff' }}>
+        <Toolbar>
+          <IconButton onClick={() => navigate(-1)} sx={{ mr: 1 }}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h6" sx={{ fontFamily: '"Roboto Mono", monospace', color: '#1a73e8', fontWeight: 700, flexGrow: 1 }}>
+            {datasetId}.{tableId}
+          </Typography>
+          <Tooltip title="רענן נתוני פרופיל מ-GCP">
+            <span>
+              <IconButton
+                color="primary"
+                disabled={isRefreshing || isLoading}
+                onClick={triggerHardRefresh}
+              >
+                {isRefreshing ? <CircularProgress size={20} /> : <Refresh />}
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Toolbar>
+      </AppBar>
+
       <Container maxWidth="xl" sx={{ py: 5 }} dir="rtl">
         <ProfileHeader
           tableId={profile.table_id}

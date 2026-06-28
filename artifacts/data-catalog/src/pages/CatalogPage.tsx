@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container, Box, Typography, TextField, MenuItem, Select,
   FormControl, InputLabel, Grid, Skeleton, Alert, Button,
-  IconButton, AppBar, Toolbar, Chip
+  IconButton, AppBar, Toolbar, Chip, CircularProgress, Tooltip
 } from '@mui/material';
 import { Search, Refresh, ErrorOutlined } from '@mui/icons-material';
 import {
@@ -11,12 +11,16 @@ import {
   useGetCatalogStats,
   getGetCatalogStatsQueryKey
 } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 import StatsBar from '../components/StatsBar';
 import DatasetCard from '../components/DatasetCard';
+import { useRefresh } from '../contexts/RefreshContext';
 
 export default function CatalogPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'tables_count'>('name');
+  const queryClient = useQueryClient();
+  const { registerHardRefresh, triggerHardRefresh, isRefreshing } = useRefresh();
 
   const { data: statsData } = useGetCatalogStats({
     query: { queryKey: getGetCatalogStatsQueryKey() }
@@ -37,6 +41,21 @@ export default function CatalogPage() {
     }
   );
 
+  // Register the hard-refresh handler for this page.
+  // Uses queryClient.clear() to wipe ALL cached entries reliably (avoids
+  // guessing the generated URL-based query key structure).
+  useEffect(() => {
+    registerHardRefresh(async () => {
+      // 1. Bypass backend cache
+      await Promise.allSettled([
+        fetch(`/api/datasets?refresh=true`),
+        fetch(`/api/catalog/stats?refresh=true`),
+      ]);
+      // 2. Wipe React Query cache so active queries refetch automatically
+      queryClient.clear();
+    });
+  }, [registerHardRefresh, queryClient]);
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: '1px solid #dadce0' }}>
@@ -47,9 +66,17 @@ export default function CatalogPage() {
           {statsData?.project_id && (
             <Chip label={`פרויקט: ${statsData.project_id}`} sx={{ ml: 2 }} variant="outlined" />
           )}
-          <IconButton onClick={() => refetch()} color="primary" title="רענן נתונים">
-            <Refresh />
-          </IconButton>
+          <Tooltip title="רענן נתונים מ-GCP">
+            <span>
+              <IconButton
+                onClick={triggerHardRefresh}
+                color="primary"
+                disabled={isRefreshing || isLoading}
+              >
+                {isRefreshing ? <CircularProgress size={20} /> : <Refresh />}
+              </IconButton>
+            </span>
+          </Tooltip>
         </Toolbar>
       </AppBar>
 
@@ -108,10 +135,10 @@ export default function CatalogPage() {
         ) : data?.datasets.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10, px: 2, backgroundColor: '#fff', borderRadius: 2, border: '1px dashed #dadce0' }}>
             <Search sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" sx={{ color: 'text.secondary' }}>
               לא נמצאו מאגרי נתונים
             </Typography>
-            <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ color: 'text.disabled', mt: 1 }}>
               נסה לשנות את מילות החיפוש
             </Typography>
           </Box>

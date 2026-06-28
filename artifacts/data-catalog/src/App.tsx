@@ -6,12 +6,12 @@ import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 import rtlPlugin from "stylis-plugin-rtl";
 import { theme } from "./theme";
+import { RefreshProvider } from "./contexts/RefreshContext";
 import CatalogPage from "./pages/CatalogPage";
 import DatasetPage from "./pages/DatasetPage";
 import TableProfilePage from "./pages/TableProfilePage";
 
-// Emotion cache wired up for RTL (stylis-plugin-rtl flips all physical
-// CSS properties to their logical equivalents at the stylesheet level).
+// Emotion cache wired up for RTL
 const cacheRtl = createCache({
   key: "muirtl",
   stylisPlugins: [rtlPlugin],
@@ -22,6 +22,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      // Keep data fresh for 5 minutes — matches backend TTL
+      staleTime: 5 * 60 * 1000,
     },
   },
 });
@@ -54,7 +56,9 @@ function App() {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <BrowserRouter>
-            <AppRoutes />
+            <RefreshProvider>
+              <AppRoutes />
+            </RefreshProvider>
           </BrowserRouter>
         </ThemeProvider>
       </CacheProvider>

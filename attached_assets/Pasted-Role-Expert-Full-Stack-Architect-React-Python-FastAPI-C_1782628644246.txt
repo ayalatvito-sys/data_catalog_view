@@ -1,0 +1,38 @@
+Role: Expert Full-Stack Architect (React & Python FastAPI)
+
+Context: > I am providing you with my Git repository.
+
+Frontend: A React application located in the frontend workspace.
+
+Backend: A Python FastAPI application located in artifacts/data-catalog-api.
+
+CRITICAL: Completely IGNORE the folder artifacts/api-server-OLD (it is deprecated Node.js code). Do not modify or reference it.
+
+The Problem: > Currently, the application is extremely slow. Every time a user navigates between pages (e.g., Datasets -> Tables -> Table Profile) or goes back, the frontend completely unmounts and fetches data from scratch. The Python backend also fetches fresh data from GCP every single time.
+
+The Goal: Implement a robust Full-Stack Caching System.
+
+Task 1: Backend Caching (Python/FastAPI)
+
+Create a centralized memory cache utility (e.g., a decorator in a cache_utils.py file) that stores function responses based on arguments.
+
+Apply this caching mechanism to all services that fetch data from GCP (e.g., fetching datasets, tables, profiling).
+
+Update the API endpoints (in main.py or routers) to accept a query parameter ?refresh=true. When True, the backend must bypass the memory cache, fetch fresh data from GCP, and update the cache. If False or omitted, it should return the cached data instantly.
+
+Task 2: Frontend Caching (React)
+
+Integrate @tanstack/react-query into the React application to handle frontend caching, state, and background fetching.
+
+Wrap the app with QueryClientProvider.
+
+Refactor the existing data fetching logic (which currently uses useEffect and fetch) in the main pages (Datasets Page, Tables Page, Profile Page) to use useQuery. This will ensure instant loading when navigating "Back" or revisiting cached pages.
+
+Task 3: Global Refresh Button (UI)
+
+Add a persistent "Refresh" icon/button to the global Header or Layout component so it is visible on all pages.
+
+When this button is clicked, it should trigger a hard refresh: It must invalidate the React Query cache for the current view and append ?refresh=true to the backend API call to force the Python server to update its cache from GCP.
+
+Instructions for output:
+Please provide the step-by-step shell commands to install required frontend packages, followed by the exact code changes needed for the backend and frontend. Tell me exactly which files to create or update.
