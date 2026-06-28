@@ -17,13 +17,30 @@ const cacheRtl = createCache({
   stylisPlugins: [rtlPlugin],
 });
 
+// const queryClient = new QueryClient({
+//   defaultOptions: {
+//     queries: {
+//       retry: 1,
+//       refetchOnWindowFocus: false,
+//       // Keep data fresh for 5 minutes — matches backend TTL
+//       staleTime: 5 * 60 * 1000,
+//     },
+//   },
+// });
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      // כמה זמן הנתונים נחשבים "טריים"? (24 שעות באלפיות שנייה)
+      staleTime: 1000 * 60 * 60 * 24, 
+      // כמה זמן לשמור אותם בזיכרון הפיזי גם אם לא מסתכלים עליהם? (24 שעות)
+      gcTime: 1000 * 60 * 60 * 24, 
+      // לא לרענן אוטומטית כשעוברים בין חלונות בדפדפן
       refetchOnWindowFocus: false,
-      // Keep data fresh for 5 minutes — matches backend TTL
-      staleTime: 5 * 60 * 1000,
+      // לא לרענן אוטומטית בכל פעם שהקומפוננטה נטענת מחדש
+      refetchOnMount: false,
+      // לנסות שוב פעם אחת בלבד במקרה של שגיאה (במקום 3 פעמים כברירת מחדל)
+      retry: 1,
     },
   },
 });
