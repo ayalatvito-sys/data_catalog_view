@@ -416,12 +416,79 @@ export default function DatasetPage() {
       <Box sx={{ px: 4, pt: 3 }}>
         {tablesError && <Alert severity="error" sx={{ mb: 2 }}>שגיאה בטעינת טבלאות</Alert>}
 
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, borderBottom: '1px solid #dadce0' }}>
+        {/* <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, borderBottom: '1px solid #dadce0' }}>
           <Tab icon={<TableChart fontSize="small" />} iconPosition="start"
             label={<span>טבלאות {!loadingTables && <Badge badgeContent={tables.length} color="primary" sx={{ ml: 1 }} />}</span>} />
           <Tab icon={<AccountTree fontSize="small" />} iconPosition="start"
             label={<span>גרף קשרים {!loadingRels && <Badge badgeContent={relationships.length} color="secondary" sx={{ ml: 1 }} />}</span>} />
-        </Tabs>
+        </Tabs> */}
+
+        <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, borderBottom: '1px solid #dadce0' }}>
+        
+        {/* טאב טבלאות */}
+        <Tab 
+          icon={<TableChart fontSize="small" />} 
+          iconPosition="start"
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <span>טבלאות</span>
+              {!loadingTables && (
+                <Box
+                  sx={{
+                    ml: 1.5, // הרווח מהטקסט (ב-RTL זה דוחף שמאלה)
+                    bgcolor: 'primary.main', // צבע רקע כחול של MUI
+                    color: 'white',
+                    borderRadius: '12px', // עיגול הקצוות כדי ליצור צורת "גלולה"
+                    px: 1, // ריפוד פנימי בצדדים כדי שהמספר לא יגע בדפנות
+                    minWidth: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    lineHeight: 1,
+                  }}
+                >
+                  {tables.length > 99 ? '99+' : tables.length}
+                </Box>
+              )}
+            </Box>
+          } 
+        />
+
+        {/* טאב גרף קשרים */}
+        <Tab 
+          icon={<AccountTree fontSize="small" />} 
+          iconPosition="start"
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <span>גרף קשרים</span>
+              {!loadingRels && (
+                <Box
+                  sx={{
+                    ml: 1.5,
+                    bgcolor: 'secondary.main', // צבע רקע סגול של MUI
+                    color: 'white',
+                    borderRadius: '12px',
+                    px: 1,
+                    minWidth: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    lineHeight: 1,
+                  }}
+                >
+                  {relationships.length > 99 ? '99+' : relationships.length}
+                </Box>
+              )}
+            </Box>
+          } 
+        />
+      </Tabs>
 
         {/* Tab 0 — Tables */}
         {tab === 0 && (

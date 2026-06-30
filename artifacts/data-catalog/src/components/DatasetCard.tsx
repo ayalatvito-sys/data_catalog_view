@@ -65,7 +65,7 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
             </Typography>
           </Tooltip>
 
-          <Box sx={{ mb: 3, minHeight: 48, position: 'relative' }}>
+          {/* <Box sx={{ mb: 3, minHeight: 48, position: 'relative' }}>
             <Typography
               variant="body2"
               color={hasDesc ? 'text.primary' : 'text.disabled'}
@@ -90,6 +90,51 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
                 <InfoOutlined fontSize="small" />
               </IconButton>
             )}
+          </Box> */}
+
+          <Box 
+            sx={{ 
+              mb: 3, 
+              minHeight: 48,
+              display: 'flex', 
+              alignItems: 'flex-start', // מיישר את האייקון לשורה הראשונה של הטקסט
+              gap: 1 // רווח פיזי קבוע בין האייקון לטקסט שמונע עלייה אחד על השני
+            }}
+          >
+            {/* האייקון - הוא היחיד שלחיץ עכשיו */}
+            {hasDesc && (
+              <Tooltip title=" לקריאת התיאור המלא" placement="top" arrow>
+                <IconButton 
+                  size="small"
+                  onClick={(e) => { 
+                    e.stopPropagation();
+                    setOpen(true);
+                  }}
+                  sx={{ 
+                    p: 0.5, // ריפוד קטן שיהיה נוח ללחוץ
+                    mt: '-2px', // יישור עדין כלפי מעלה כדי שיהיה בדיוק בקו של האותיות
+                    color: 'text.secondary' 
+                  }}
+                >
+                  <InfoOutlined fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* הטקסט - רגיל, לא לחיץ, ותופס את שאר המקום */}
+            <Typography
+              variant="body2"
+              color={hasDesc ? 'text.primary' : 'text.disabled'}
+              sx={{
+                flex: 1, // זה הקסם שמונע מהטקסט לעלות על האייקון
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {dataset.description_he || 'אין תיאור'}
+            </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 'auto' }}>
@@ -98,7 +143,6 @@ export default function DatasetCard({ dataset }: DatasetCardProps) {
               label={`${dataset.tables_count} טבלאות`}
               size="small"
               variant="outlined"
-              sx={{ direction: 'rtl' }}
             />
             <Chip
               icon={<Place fontSize="small" />}
