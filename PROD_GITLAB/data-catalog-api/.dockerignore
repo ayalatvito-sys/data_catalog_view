@@ -1,0 +1,39 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Dev / test artefacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+htmlcov/
+.coverage
+*.log
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local secrets / GCP credentials — NEVER ship these
+*.json           # e.g. service-account.json
+application_default_credentials.json
+gcloud/
+
+# Replit-specific
+.replit
+.replit-artifact/
+tmp.py
