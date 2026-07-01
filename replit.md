@@ -75,3 +75,6 @@ unset GOOGLE_APPLICATION_CREDENTIALS
 gcloud auth login
 gcloud auth application-default login --disable-quota-project
 gcloud config set project dgt-gcp-econ-dev-datalake
+
+
+bash _deployment/setup-repos.sh
