@@ -36,40 +36,27 @@ export default function StatsBar() {
     <Grid container spacing={2} sx={{ mb: 4 }}>
       {statItems.map((item, index) => (
         <Grid size={{ xs: 12, sm: 4, md: 4 }} key={index}>
-          <Card
-            elevation={0}
-            sx={{ border: '1px solid #dadce0', borderRadius: 2 }}
-          >
-            <CardContent sx={{ p: '10px 14px !important' }}>
-              {/* Title — centered, compact */}
+          <Card elevation={0} sx={{ border: '1px solid #dadce0', borderRadius: 2 }}>
+            {/*
+              RTL layout:
+              - paddingRight anchors content firmly to the right edge
+              - title and value+icon row both use flex-start (= visual right in RTL)
+            */}
+            <CardContent sx={{ p: '10px 14px 10px 14px !important', pr: '24px !important' }}>
+
+              {/* Title — right-aligned, sits directly above the value/icon pair */}
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: 'block', textAlign: 'center', mb: 0.75, fontWeight: 500, lineHeight: 1.3 }}
+                sx={{ display: 'block', textAlign: 'right', mb: 0.75, fontWeight: 500, lineHeight: 1.3 }}
               >
                 {item.title}
               </Typography>
 
-              {/* Value + icon — tightly paired, centered as a unit */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '12px',
-                }}
-              >
-                {isLoading ? (
-                  <Skeleton width={48} height={26} />
-                ) : (
-                  <Typography
-                    variant="body1"
-                    sx={{ fontWeight: 700, color: '#202124', lineHeight: 1 }}
-                  >
-                    {item.value}
-                  </Typography>
-                )}
+              {/* Icon (right) + Value (left) — anchored to the right, tight 12px gap */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px' }}>
 
+                {/* Icon goes first in DOM = rightmost in RTL flex row */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -86,7 +73,20 @@ export default function StatsBar() {
                 >
                   {item.icon}
                 </Box>
+
+                {/* Value comes second in DOM = to the left of the icon in RTL */}
+                {isLoading ? (
+                  <Skeleton width={48} height={26} />
+                ) : (
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: 700, color: '#202124', lineHeight: 1 }}
+                  >
+                    {item.value}
+                  </Typography>
+                )}
               </Box>
+
             </CardContent>
           </Card>
         </Grid>
