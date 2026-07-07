@@ -53,10 +53,10 @@ export default function StatsBar() {
                 {item.title}
               </Typography>
 
-              {/* Icon (right) + Value (left) — anchored to the right, tight 12px gap */}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px' }}>
+              {/* Value (left) + Icon (right) — row-reverse pushes icon to the right visually */}
+              <Box sx={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
 
-                {/* Icon goes first in DOM = rightmost in RTL flex row */}
+                {/* Icon — second in DOM, but row-reverse places it on the visual right */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -74,7 +74,7 @@ export default function StatsBar() {
                   {item.icon}
                 </Box>
 
-                {/* Value comes second in DOM = to the left of the icon in RTL */}
+                {/* Value — first in DOM, row-reverse places it to the left of the icon */}
                 {isLoading ? (
                   <Skeleton width={48} height={26} />
                 ) : (
