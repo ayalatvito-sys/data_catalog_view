@@ -114,10 +114,10 @@ class TableProfileResponse(BaseModel):
     columns: List[ColumnProfile] = []
 
 class PipelineStatus(BaseModel):
-    pipeline_name: str
+    pipeline_name: Optional[str] = None
     environment: Optional[str] = None
     as_of_date: Optional[datetime] = None
-    current_status: str
+    current_status: Optional[str] = None
 
 class PipelineStatusResponse(BaseModel):
     pipelines: List[PipelineStatus]

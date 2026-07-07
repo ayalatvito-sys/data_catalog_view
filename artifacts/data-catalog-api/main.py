@@ -15,6 +15,8 @@ from models import (
     TableProfileResponse, ColumnProfile, TopNValue, NumericStats, StringStats, DatetimeStats
 )
 
+from models import PipelineStatusResponse
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
