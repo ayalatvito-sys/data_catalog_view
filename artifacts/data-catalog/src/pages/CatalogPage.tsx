@@ -85,12 +85,12 @@ export default function CatalogPage() {
           )}
 
           {/* Pipeline status button */}
-          <Tooltip title="סטטוס צינורות נתונים">
+          <Tooltip title="סטטוס תהליכים נתונים">
             <IconButton
               onClick={() => setPipelineDrawerOpen(true)}
               color={failedCount > 0 ? 'error' : 'default'}
               sx={{ ml: 0.5 }}
-              aria-label="פתח פאנל סטטוס צינורות"
+              aria-label="פתח פאנל סטטוס תהליכים"
             >
               <Badge
                 badgeContent={failedCount > 0 ? failedCount : undefined}

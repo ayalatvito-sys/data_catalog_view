@@ -75,3 +75,28 @@ gcloud config set project dgt-gcp-econ-dev-datalake
 ## User preferences
 
 _Populate as you build — explicit user instructions worth remembering across sessions._
+
+
+python:
+cd ~/data_catalog_view/artifacts/data-catalog-api
+pip install -r requirements.txt --break-system-packages
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+react:5000
+cd ~/data_catalog_view
+npm install -g pnpm
+pnpm install
+pnpm --filter @workspace/data-catalog run dev
+
+fuser -k 5000/tcp
+
+
+login:
+rm -rf ~/.config/gcloud/
+unset GOOGLE_APPLICATION_CREDENTIALS
+gcloud auth login
+gcloud auth application-default login --disable-quota-project
+gcloud config set project dgt-gcp-econ-dev-datalake
+
+sudo apt-get update && sudo apt-get install rsync -y
+bash _deployment/setup-repos.sh

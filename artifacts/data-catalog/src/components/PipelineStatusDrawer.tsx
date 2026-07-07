@@ -362,7 +362,7 @@ export default function PipelineStatusDrawer({ open, onClose }: PipelineStatusDr
               size="small"
               onClick={handleManualRefresh}
               disabled={isFetching}
-              aria-label="רענן סטטוס צינורות"
+              aria-label="רענן סטטוס תהליכים"
             >
               <Sync fontSize="small" />
             </IconButton>
@@ -402,7 +402,7 @@ export default function PipelineStatusDrawer({ open, onClose }: PipelineStatusDr
         ) : grouped.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 6, color: '#5f6368' }}>
             <Timeline sx={{ fontSize: 40, opacity: 0.3, mb: 1 }} />
-            <Typography variant="body2">אין נתוני צינורות</Typography>
+            <Typography variant="body2">אין נתוני תהליכים</Typography>
           </Box>
         ) : (
           grouped.map(({ env, pipelines }) => (

@@ -17,7 +17,7 @@ export async function fetchPipelineStatuses(
   const url = `/api/pipelines/status${refresh ? '?refresh=true' : ''}`;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error('שגיאה בשליפת סטטוס הצינורות');
+    throw new Error('שגיאה בשליפת סטטוס התהליכים');
   }
   return response.json() as Promise<PipelineStatusResponse>;
 }

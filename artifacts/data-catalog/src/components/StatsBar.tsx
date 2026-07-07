@@ -22,7 +22,6 @@ export default function StatsBar() {
       value: stats?.total_tables ?? 0,
       icon: <TableChart />,
     },
-    // "מיקומים" removed — all data resides in a single region
     {
       title: 'עודכן לאחרונה',
       value: stats?.last_updated
@@ -37,26 +36,23 @@ export default function StatsBar() {
       {statItems.map((item, index) => (
         <Grid size={{ xs: 12, sm: 4, md: 4 }} key={index}>
           <Card elevation={0} sx={{ border: '1px solid #dadce0', borderRadius: 2 }}>
-            {/*
-              RTL layout:
-              - paddingRight anchors content firmly to the right edge
-              - title and value+icon row both use flex-start (= visual right in RTL)
-            */}
             <CardContent sx={{ p: '10px 14px 10px 14px !important', pr: '24px !important' }}>
 
-              {/* Title — right-aligned, sits directly above the value/icon pair */}
+              {/* כותרת מיושרת לימין */}
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: 'block', textAlign: 'right', mb: 0.75, fontWeight: 500, lineHeight: 1.3 }}
+                sx={{ display: 'block',  mb: 0.75, fontWeight: 500, lineHeight: 1.3 }}
               >
                 {item.title}
               </Typography>
 
-              {/* Value (left) + Icon (right) — row-reverse pushes icon to the right visually */}
-              <Box sx={{ display: 'flex', flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
+              {/* ביטלנו את ההיפוך (row-reverse) והשתמשנו ביישור טבעי לעברית (flex-start).
+                בגלל שהמערכת ב-RTL, האייקון שמופיע ראשון בקוד יישב בצד ימין, והמספר משמאלו.
+              */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px' }}>
 
-                {/* Icon — second in DOM, but row-reverse places it on the visual right */}
+                {/* האייקון - יופיע מימין */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -74,7 +70,7 @@ export default function StatsBar() {
                   {item.icon}
                 </Box>
 
-                {/* Value — first in DOM, row-reverse places it to the left of the icon */}
+                {/* המספר/תאריך - יופיע משמאל לאייקון */}
                 {isLoading ? (
                   <Skeleton width={48} height={26} />
                 ) : (
