@@ -100,3 +100,13 @@ gcloud config set project dgt-gcp-econ-dev-datalake
 
 sudo apt-get update && sudo apt-get install rsync -y
 bash _deployment/setup-repos.sh
+mv ~/data-catalog-api ~/data-catalog-app ~/data-catalog-mng PROD_GITLAB/
+rm -rf PROD_GITLAB/data-catalog-api/.git
+rm -rf PROD_GITLAB/data-catalog-app/.git
+rm -rf PROD_GITLAB/data-catalog-mng/.git
+git rm --cached PROD_GITLAB/data-catalog-api
+git rm --cached PROD_GITLAB/data-catalog-app
+git rm --cached PROD_GITLAB/data-catalog-mng
+git add .
+git commit -m "prod with pipeline feature as regular folders"
+git push
