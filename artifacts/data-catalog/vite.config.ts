@@ -21,12 +21,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 5173,
+    port: 5000,
     strictPort: true,
     host: "0.0.0.0",
     allowedHosts: true,
     proxy: {
-      "/api": "http://localhost:5000",
+      "/api": "http://localhost:8000",
     },
   },
 });

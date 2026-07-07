@@ -2,25 +2,41 @@ import { useEffect, useState } from 'react';
 import {
   Container, Box, Typography, TextField, MenuItem, Select,
   FormControl, InputLabel, Grid, Skeleton, Alert, Button,
-  IconButton, AppBar, Toolbar, Chip, CircularProgress, Tooltip
+  IconButton, AppBar, Toolbar, Chip, CircularProgress, Tooltip,
+  Badge,
 } from '@mui/material';
-import { Search, Refresh, ErrorOutlined } from '@mui/icons-material';
+import { Search, Refresh, ErrorOutlined, Timeline } from '@mui/icons-material';
 import {
   useListDatasets,
   getListDatasetsQueryKey,
   useGetCatalogStats,
   getGetCatalogStatsQueryKey
 } from '@workspace/api-client-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import StatsBar from '../components/StatsBar';
 import DatasetCard from '../components/DatasetCard';
 import { useRefresh } from '../contexts/RefreshContext';
+import PipelineStatusDrawer, { PIPELINE_STATUS_QUERY_KEY } from '../components/PipelineStatusDrawer';
+import { fetchPipelineStatuses } from '../services/pipelineService';
 
 export default function CatalogPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'tables_count'>('name');
+  const [pipelineDrawerOpen, setPipelineDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
   const { registerHardRefresh, triggerHardRefresh, isRefreshing } = useRefresh();
+
+  // Pre-fetch pipeline statuses so the badge count is always available
+  const { data: pipelineData } = useQuery({
+    queryKey: PIPELINE_STATUS_QUERY_KEY,
+    queryFn: () => fetchPipelineStatuses(false),
+  });
+
+  const failedCount = pipelineData?.pipelines.filter(
+    (p) =>
+      p.current_status?.toUpperCase() === 'FAILED' ||
+      p.current_status?.toUpperCase() === 'FAILURE',
+  ).length ?? 0;
 
   const { data: statsData } = useGetCatalogStats({
     query: { queryKey: getGetCatalogStatsQueryKey() }
@@ -46,10 +62,11 @@ export default function CatalogPage() {
   // guessing the generated URL-based query key structure).
   useEffect(() => {
     registerHardRefresh(async () => {
-      // 1. Bypass backend cache
+      // 1. Bypass backend cache for all endpoints (including pipelines)
       await Promise.allSettled([
         fetch(`/api/datasets?refresh=true`),
         fetch(`/api/catalog/stats?refresh=true`),
+        fetch(`/api/pipelines/status?refresh=true`),
       ]);
       // 2. Wipe React Query cache so active queries refetch automatically
       queryClient.clear();
@@ -66,6 +83,25 @@ export default function CatalogPage() {
           {statsData?.project_id && (
             <Chip label={`פרויקט: ${statsData.project_id}`} sx={{ ml: 2 }} variant="outlined" />
           )}
+
+          {/* Pipeline status button */}
+          <Tooltip title="סטטוס צינורות נתונים">
+            <IconButton
+              onClick={() => setPipelineDrawerOpen(true)}
+              color={failedCount > 0 ? 'error' : 'default'}
+              sx={{ ml: 0.5 }}
+              aria-label="פתח פאנל סטטוס צינורות"
+            >
+              <Badge
+                badgeContent={failedCount > 0 ? failedCount : undefined}
+                color="error"
+                max={99}
+              >
+                <Timeline />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title="רענן נתונים מ-GCP">
             <span>
               <IconButton
@@ -79,6 +115,11 @@ export default function CatalogPage() {
           </Tooltip>
         </Toolbar>
       </AppBar>
+
+      <PipelineStatusDrawer
+        open={pipelineDrawerOpen}
+        onClose={() => setPipelineDrawerOpen(false)}
+      />
 
       <Container maxWidth="xl" sx={{ mt: 4, mb: 8, flexGrow: 1 }}>
         <StatsBar />
