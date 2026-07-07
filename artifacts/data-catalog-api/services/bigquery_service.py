@@ -142,6 +142,38 @@ class BigQueryService:
         rows = self._client.query(query, job_config=job_config).result()
         return [Relationship(**dict(row)) for row in rows]
 
+    # ─── Pipelines Status ───────────────────────────────────────────────────
+
+    @cached(ttl=300)
+    async def get_pipeline_statuses(self, *, refresh: bool = False) -> list:
+        """Returns pipeline statuses from the latest status view. Cached 5 min; bypass with refresh=True."""
+        if not self._available:
+            raise RuntimeError("BigQuery credentials not configured.")
+        
+        import asyncio
+        loop = asyncio.get_event_loop()
+        # קריאה לפונקציה הפנימית שעושה את השאילתה
+        return await loop.run_in_executor(None, self._fetch_pipeline_statuses)
+
+    def _fetch_pipeline_statuses(self) -> list:
+        query = """
+            SELECT 
+                pipeline_name,
+                environment,
+                as_of_date,
+                current_status
+            FROM `dgt-gcp-econ-dev-datalake.Logging.view2_pipeline_latest_status`
+            ORDER BY as_of_date DESC
+        """
+        try:
+            query_job = self._client.query(query)
+            results = query_job.result()
+            # ממירים כל שורה למילון כדי ש-FastAPI ידע להפוך את זה ל-JSON
+            return [dict(row) for row in results]
+        except Exception as e:
+            print(f"Error fetching pipeline statuses: {e}")
+            return []
+
     # ─── Helpers ──────────────────────────────────────────────────────────────
 
     @staticmethod

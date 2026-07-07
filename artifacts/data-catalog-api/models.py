@@ -1,5 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel
+from datetime import datetime
 
 class Dataset(BaseModel):
     dataset_id: str
@@ -111,3 +112,12 @@ class TableProfileResponse(BaseModel):
     table_id: str
     scanned_rows: Optional[int] = None
     columns: List[ColumnProfile] = []
+
+class PipelineStatus(BaseModel):
+    pipeline_name: str
+    environment: Optional[str] = None
+    as_of_date: Optional[datetime] = None
+    current_status: str
+
+class PipelineStatusResponse(BaseModel):
+    pipelines: List[PipelineStatus]

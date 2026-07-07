@@ -125,6 +125,23 @@ async def get_dataset(
         logger.exception("Error fetching dataset %s", dataset_id)
         raise HTTPException(status_code=500, detail=str(e))
 
+# ─── Pipelines ────────────────────────────────────────────────────────────────
+
+@router.get("/pipelines/status", response_model=PipelineStatusResponse)
+async def get_pipelines_status(
+    refresh: bool = Query(False, description="Bypass backend cache"),
+):
+    require_bq() # אני מניח שאת צריכה את זה פה כמו בשאר הנתיבים מול BigQuery
+    try:
+        # קריאה לשירות עם העברת פרמטר הרענון
+        data = await bq_service.get_pipeline_statuses(refresh=refresh)
+        
+        return PipelineStatusResponse(pipelines=data)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error fetching pipeline statuses")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ─── Tables ───────────────────────────────────────────────────────────────────
 
