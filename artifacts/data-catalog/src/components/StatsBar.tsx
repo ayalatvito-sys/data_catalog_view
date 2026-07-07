@@ -15,12 +15,12 @@ export default function StatsBar() {
     {
       title: 'מאגרי נתונים',
       value: stats?.total_datasets ?? 0,
-      icon: <Storage color="primary" />,
+      icon: <Storage />,
     },
     {
       title: 'סך הכל טבלאות',
       value: stats?.total_tables ?? 0,
-      icon: <TableChart color="primary" />,
+      icon: <TableChart />,
     },
     // "מיקומים" removed — all data resides in a single region
     {
@@ -28,7 +28,7 @@ export default function StatsBar() {
       value: stats?.last_updated
         ? new Date(stats.last_updated).toLocaleDateString('he-IL')
         : 'לא ידוע',
-      icon: <Update color="primary" />,
+      icon: <Update />,
     },
   ];
 
@@ -36,32 +36,52 @@ export default function StatsBar() {
     <Grid container spacing={2} sx={{ mb: 4 }}>
       {statItems.map((item, index) => (
         <Grid size={{ xs: 12, sm: 4, md: 4 }} key={index}>
-          <Card elevation={0} sx={{ border: '1px solid #dadce0', borderRadius: 2 }}>
-            <CardContent sx={{ p: '16px !important' }}>
-              {/* Title row */}
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          <Card
+            elevation={0}
+            sx={{ border: '1px solid #dadce0', borderRadius: 2 }}
+          >
+            <CardContent sx={{ p: '10px 14px !important' }}>
+              {/* Title — centered, compact */}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', textAlign: 'center', mb: 0.75, fontWeight: 500, lineHeight: 1.3 }}
+              >
                 {item.title}
               </Typography>
 
-              {/* Value + icon row */}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+              {/* Value + icon — tightly paired, centered as a unit */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                }}
+              >
                 {isLoading ? (
-                  <Skeleton width={60} height={36} />
+                  <Skeleton width={48} height={26} />
                 ) : (
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#202124', lineHeight: 1 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: 700, color: '#202124', lineHeight: 1 }}
+                  >
                     {item.value}
                   </Typography>
                 )}
+
                 <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 48,
-                    height: 48,
+                    width: 30,
+                    height: 30,
                     borderRadius: '50%',
                     backgroundColor: '#e8f0fe',
                     flexShrink: 0,
+                    color: '#1a73e8',
+                    '& .MuiSvgIcon-root': { fontSize: 16 },
                   }}
                 >
                   {item.icon}
