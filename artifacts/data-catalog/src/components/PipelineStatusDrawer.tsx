@@ -97,13 +97,11 @@ function getStatusStyle(status: string | null): StatusStyle {
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   try {
-    return new Intl.DateTimeFormat('he-IL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(iso));
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}.${mm}.${yyyy}`;
   } catch {
     return iso;
   }
@@ -339,11 +337,11 @@ export default function PipelineStatusDrawer({ open, onClose }: PipelineStatusDr
         <Timeline sx={{ color: '#1a73e8', fontSize: 22 }} />
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#202124', lineHeight: 1.2 }}>
-            סטטוס צינורות נתונים
+            סטטוס תהליכי נתונים
           </Typography>
           {data && (
             <Typography variant="caption" sx={{ color: '#5f6368' }}>
-              {data.pipelines.length} צינורות
+              {data.pipelines.length} תהליכים
               {totalFailed > 0 && (
                 <Box component="span" sx={{ color: '#d93025', fontWeight: 600, ml: 0.5 }}>
                   · {totalFailed} נכשלו
