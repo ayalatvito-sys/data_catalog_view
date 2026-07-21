@@ -1,0 +1,8 @@
+functions-framework==3.*
+google-cloud-bigquery==3.*
+google-cloud-dataplex==2.*
+protobuf==5.*
+
+# pip install --upgrade pydantic uvicorn --break-system-packages
+
+google-cloud-datacatalog
