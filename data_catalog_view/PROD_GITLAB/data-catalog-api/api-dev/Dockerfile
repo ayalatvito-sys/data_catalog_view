@@ -38,8 +38,9 @@ USER appuser
 ENV PORT=8080
 
 # GCP project/location — override at Cloud Run service level
-ENV GCP_PROJECT_ID=""
+ENV GCP_PROJECT_ID="dgt-gcp-econ-dev-datalake"
 ENV GCP_LOCATION="me-west1"
+ENV GOOGLE_CLOUD_PROJECT="dgt-gcp-econ-dev-datalake"
 
 EXPOSE 8080
 

@@ -210,6 +210,8 @@ async def get_table_profile(
         if not dataplex_service or not dataplex_service.is_available:
             raise HTTPException(status_code=503, detail="Dataplex is not available")
 
+        print("get_table_profiling")
+
         raw_profile = await dataplex_service.get_table_profiling(dataset_id, table_id, refresh=refresh)
 
         # 1. חילוץ מידע כללי על הריצה

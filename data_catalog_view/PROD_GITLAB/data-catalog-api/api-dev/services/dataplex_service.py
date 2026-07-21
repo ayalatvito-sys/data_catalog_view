@@ -237,9 +237,12 @@ class DataplexService:
     @cached(ttl=300)
     async def get_table_profiling(self, dataset_id: str, table_id: str, *, refresh: bool = False) -> dict:
         """שולף את הנתונים באופן אסינכרוני"""
+        print("dataplex.get_table_profiling")
         if not self._available:
             return {}
-            
+        print("get_event_loop")    
+        print(f"dataset_id: {dataset_id}, table_id {table_id}")
+
         import asyncio
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self._fetch_table_profiling_sync, dataset_id, table_id)
@@ -248,13 +251,28 @@ class DataplexService:
         """השליפה הפיזית מ-Dataplex במבנה של CUSTOM"""
         try:
             from google.cloud import dataplex_v1
-            
+
+            print("start _fetch_table_profiling_sync")
+            from google.auth import default
+
+            cred, project = default()
+            print(type(cred))
+            print(project)
+
+            import google.auth.transport.requests
+
+            cred.refresh(google.auth.transport.requests.Request())
+            print(cred.service_account_email)
+
             entry_name = (
                 f"projects/{self.project_id}/locations/{self.location}/entryGroups/@bigquery/"
                 f"entries/bigquery.googleapis.com/projects/{self.project_id}/datasets/{dataset_id}/tables/{table_id}"
             )
             
+            print(entry_name)
+
             schema_name = "projects/dataplex-types/locations/global/aspectTypes/data-profile"
+            # schema_name = "projects/*/locations/global/aspectTypes/data-profile"
             
             req = dataplex_v1.GetEntryRequest(
                 name=entry_name,
@@ -263,12 +281,23 @@ class DataplexService:
             )
             
             entry = self._client.get_entry(request=req)
-            
+            print(entry.name)
+            print(dataplex_v1.__version__)
+
             # חיפוש דינאמי של מפתח הפרופיילינג
             for key, aspect in entry.aspects.items():
+                print(f"key {key},  aspect {aspect}")
                 if "data-profile" in key.lower():
+                    print(f"aspect.data {aspect.data}")
+                    print(f"aspect._pb {aspect._pb}")
                     if aspect.data:
                         return dict(aspect.data)
+
+#             logging.getLogger(__name__).warning(
+#             "No data-profile aspect found for %s.%s. Available keys: %s",
+#             dataset_id, table_id, list(entry.aspects.keys())
+# )                   
+            
             return {}
         except Exception as e:
             import logging

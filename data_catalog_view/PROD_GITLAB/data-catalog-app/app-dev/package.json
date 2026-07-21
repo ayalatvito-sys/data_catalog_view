@@ -6,5 +6,10 @@
     "dev": "pnpm --filter @workspace/data-catalog run dev",
     "build": "pnpm --filter @workspace/data-catalog run build",
     "typecheck": "pnpm --filter @workspace/data-catalog run typecheck"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
